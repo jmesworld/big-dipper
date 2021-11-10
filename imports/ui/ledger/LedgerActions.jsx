@@ -785,7 +785,7 @@ class DelegationButtons extends LedgerButton {
         let canUnbond = !delegation.unbonding || maxEntries > delegation.unbonding;
         return <span>
             <div id='redelegate-button' className={`disabled-btn-wrapper${isCompleted?'':' disabled'}`}>
-                <Button color="danger" size="sm" disabled={!isCompleted}
+                <Button color="warning" size="sm" disabled={!isCompleted}
                     onClick={() => this.openModal(Types.REDELEGATE)}>
                     {TypeMeta[Types.REDELEGATE].button}
                 </Button>
@@ -796,7 +796,7 @@ class DelegationButtons extends LedgerButton {
                 </UncontrolledTooltip>}
             </div>
             <div id='undelegate-button' className={`disabled-btn-wrapper${canUnbond?'':' disabled'}`}>
-                <Button color="warning" size="sm" disabled={!canUnbond}
+                <Button color="danger" size="sm" disabled={!canUnbond}
                     onClick={() => this.openModal(Types.UNDELEGATE)}>
                     {TypeMeta[Types.UNDELEGATE].button}
                 </Button>
