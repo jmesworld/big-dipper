@@ -1204,7 +1204,7 @@ class ProposalActionButtons extends LedgerButton {
     render = () => {
         return <span className="ledger-buttons-group float-right">
             <Row>
-                {this.state.validator && this.props.voteStarted ? 
+                {this.props.voteStarted ? 
                     <Col><Button color="secondary" size="sm"
                         onClick={() => this.openModal(Types.VOTE, {})}>
                         {TypeMeta[Types.VOTE].button}
