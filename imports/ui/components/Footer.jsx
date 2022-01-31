@@ -41,14 +41,11 @@ export default class Footer extends React.Component {
                         location="bottom"
                         buttonText="I understand"
                         contentClasses="text-capitalize"
-                        style={{ margin: "0% 33%", width: "33%", background: "#fd3b4cb3" }}
-                        buttonStyle={{ color: "#ffffff", background: "#6a1d27", fontSize: "15px" }}
+                        style={{ margin: "0% 32.5%", width: "35%", background: "#fd3b4cb3" }}
+                        buttonStyle={{ color: "#ffffff", background: "#6a1d27"}}
                         expires={150}
                     >
-                    We use cookies to enhance the user experience.
-                    <span style={{ marginLeft: "5px", fontSize: "12px" }}>
-                        Read our <a href="https://www.cudos.org/privacy-policy/">Privacy Policy</a>
-                    </span>
+                       We use cookies to enhance the user experience. Read our <a href="https://www.cudos.org/privacy-policy/">Privacy Policy</a>
                     </CookieConsent>  
 
                 </Navbar>
