@@ -32,7 +32,7 @@ const TYPE_URLS = {
     msgUndelegate:"/cosmos.staking.v1beta1.MsgUndelegate",
     msgRedelegate: "/cosmos.staking.v1beta1.MsgBeginRedelegate",
     msgSend: "/cosmos.bank.v1beta1.MsgSend",
-    msgWithdraw: "/cosmos.distribution.v1beta1.MsgWithdrawDelegationReward",
+    msgWithdraw: "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward",
     msgSubmitProposal: "/cosmos.gov.v1beta1.MsgSubmitProposal",
     proposalTypeCancelSoftwareUpgradeProposal: "/cosmos.upgrade.v1beta1.CancelSoftwareUpgradeProposal",
     proposalTypeSoftwareUpgradeProposal: "/cosmos.upgrade.v1beta1.SoftwareUpgradeProposal",
@@ -256,7 +256,8 @@ export class Ledger {
                         low: Meteor.settings.public.ledger.gasPrice / 2,
                         average: Meteor.settings.public.ledger.gasPrice / 8,
                         high: Meteor.settings.public.ledger.gasPrice * 2
-                    }
+                    },
+                    features: ["stargate", "ibc-transfer", "no-legacy-stdTx"]
                 });
             } catch (ex) {
                 alert("Failed to suggest the chain");
