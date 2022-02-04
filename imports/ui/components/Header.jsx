@@ -199,9 +199,12 @@ export default class Header extends Component {
                         <NavItem>
                             <NavLink tag={Link} to="/voting-power-distribution"><T>navbar.votingPower</T></NavLink>
                         </NavItem>
-                        <NavItem>
-                            <NavLink tag={Link} to="/faucet"><T>navbar.faucet</T></NavLink>
-                        </NavItem>
+                      
+                        {Meteor.settings.public.networkType === "mainnet"?null:
+                         <NavItem>
+                             <NavLink tag={Link} to="/faucet"><T>navbar.faucet</T></NavLink>
+                        </NavItem>}
+                        
                         <NavItem id="user-acconut-icon">
                             {!signedInAddress?<Button className="sign-in-btn" color="link" size="lg" onClick={async () => {await Ledger.connectKeplr(); this.props.refreshApp();}}><i className="material-icons">vpn_key</i></Button>:
                                 <span>
