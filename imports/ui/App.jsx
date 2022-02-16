@@ -92,7 +92,7 @@ class App extends Component {
                             <Route path="/voting-power-distribution" component={Distribution} />
                             <Route path="/(validator|validators)" component={ValidatorDetails} />
                             {Meteor.settings.public.modules.gov?<Route path="/proposals" component={Proposals} />:null}
-                            <Route path="/faucet" component={Faucet} />
+                            {Meteor.settings.public.networkType === "mainnet"?null:<Route path="/faucet" component={Faucet} />}
                             <Route component={NotFound} />
                         </Switch>
                     </SentryBoundary>
