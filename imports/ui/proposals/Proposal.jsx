@@ -588,7 +588,12 @@ export default class Proposal extends Component{
                 </div>
             }
             else{
-                return <div><T>proposals.notFound</T></div>
+                return <div>
+                    <T>proposals.notFound</T>
+                    <Row className='clearfix'>
+                        <Link to="/proposals" className="btn btn-primary" style={{margin: 'auto'}}><i className="fas fa-caret-up"></i> <T>common.backToList</T></Link>
+                    </Row>
+                </div>
             }
         }
     }
