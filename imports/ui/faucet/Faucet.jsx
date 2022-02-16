@@ -5,7 +5,7 @@ import i18n from 'meteor/universe:i18n';
 import FaucetModal from './FaucetModal';
 import BigNumber from 'bignumber.js';
 import { Meteor } from 'meteor/meteor';
-import { TRANSACTION_STATUS_DONE_ERROR, TRANSACTION_STATUS_DONE_ERROR_WRONG_CAPTCHA, TRANSACTION_STATUS_DONE_OK, TRANSACTION_STATUS_PENDING, TRANSACTION_STATUS_DONE_ERROR_MAX_CREDIT } from './FaucetUtils';
+import { TRANSACTION_STATUS_DONE_ERROR, TRANSACTION_STATUS_DONE_ERROR_WRONG_CAPTCHA, TRANSACTION_STATUS_DONE_OK, TRANSACTION_STATUS_PENDING, TRANSACTION_STATUS_DONE_ERROR_MAX_CREDIT, TRANSACTION_STATUS_DONE_ERROR_WRONG_ADDRESS } from './FaucetUtils';
 
 import CaptchaWrapper from '../components/CaptchaWrapper';
 
@@ -31,7 +31,9 @@ export default class Faucet extends Component {
 
     validate = () => {
         this.setState({
-            valid: this.state.valid = this.state.amount !== '' && this.state.walletAddress.startsWith(Meteor.settings.public.bech32PrefixAccAddr) && this.state.isCaptchaFilled,
+            valid: this.state.valid = this.state.amount !== '' && 
+            this.state.walletAddress !== '' && 
+            this.state.isCaptchaFilled,
         });
     }
 
@@ -58,6 +60,7 @@ export default class Faucet extends Component {
     }
 
     onClickSend = async () => {
+
         if (this.state.valid !== true) {
             return;
         }
@@ -73,6 +76,17 @@ export default class Faucet extends Component {
         });
 
         const address = this.state.walletAddress;
+        const re = /^cudos[0-9a-z]{39}$/;
+        const correctCudosAddress = address.match(re);
+
+        if (!correctCudosAddress) {
+            console.error("WRONG CUDOS ADDRESS");
+            this.setState({
+                transactionStatus: TRANSACTION_STATUS_DONE_ERROR_WRONG_ADDRESS,
+            });
+            return;
+        }
+        
         const amount = (new BigNumber(this.state.amount)).multipliedBy(Meteor.settings.public.coins[0].fraction)
         // const amount = parseInt(parseFloat(this.state.amount * Meteor.settings.public.coins[4].fraction))
         const data = {

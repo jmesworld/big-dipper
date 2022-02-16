@@ -802,7 +802,7 @@ class DelegationButtons extends LedgerButton {
         let canUnbond = !delegation.unbonding || maxEntries > delegation.unbonding;
         return <span>
             <div id='redelegate-button' className={`disabled-btn-wrapper${isCompleted?'':' disabled'}`}>
-                <Button color="warning" size="sm" disabled={!isCompleted}
+                <Button color="warning" size="lg" disabled={!isCompleted}
                     onClick={() => this.openModal(Types.REDELEGATE)}>
                     {TypeMeta[Types.REDELEGATE].button}
                 </Button>
@@ -813,7 +813,7 @@ class DelegationButtons extends LedgerButton {
                 </UncontrolledTooltip>}
             </div>
             <div id='undelegate-button' className={`disabled-btn-wrapper${canUnbond?'':' disabled'}`}>
-                <Button color="danger" size="sm" disabled={!canUnbond}
+                <Button color="danger" size="lg" disabled={!canUnbond}
                     onClick={() => this.openModal(Types.UNDELEGATE)}>
                     {TypeMeta[Types.UNDELEGATE].button}
                 </Button>
@@ -829,7 +829,7 @@ class DelegationButtons extends LedgerButton {
     render = () => {
         return <span className="ledger-buttons-group float-right">
             {isActiveValidator(this.props.validator)?<Button color="success"
-                size="sm" onClick={() => this.openModal(Types.DELEGATE)}>
+                size="lg" onClick={() => this.openModal(Types.DELEGATE)}>
                 {TypeMeta[Types.DELEGATE].button}
             </Button>:null}
             {this.renderRedelegateButtons()}
