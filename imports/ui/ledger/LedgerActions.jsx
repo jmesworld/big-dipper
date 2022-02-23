@@ -802,7 +802,7 @@ class DelegationButtons extends LedgerButton {
         let canUnbond = !delegation.unbonding || maxEntries > delegation.unbonding;
         return <span>
             <div id='redelegate-button' className={`disabled-btn-wrapper${isCompleted?'':' disabled'}`}>
-                <Button color="warning" size="sm" disabled={!isCompleted}
+                <Button color="warning" size="lg" disabled={!isCompleted}
                     onClick={() => this.openModal(Types.REDELEGATE)}>
                     {TypeMeta[Types.REDELEGATE].button}
                 </Button>
@@ -813,7 +813,7 @@ class DelegationButtons extends LedgerButton {
                 </UncontrolledTooltip>}
             </div>
             <div id='undelegate-button' className={`disabled-btn-wrapper${canUnbond?'':' disabled'}`}>
-                <Button color="danger" size="sm" disabled={!canUnbond}
+                <Button color="danger" size="lg" disabled={!canUnbond}
                     onClick={() => this.openModal(Types.UNDELEGATE)}>
                     {TypeMeta[Types.UNDELEGATE].button}
                 </Button>
@@ -829,7 +829,7 @@ class DelegationButtons extends LedgerButton {
     render = () => {
         return <span className="ledger-buttons-group float-right">
             {isActiveValidator(this.props.validator)?<Button color="success"
-                size="sm" onClick={() => this.openModal(Types.DELEGATE)}>
+                size="lg" onClick={() => this.openModal(Types.DELEGATE)}>
                 {TypeMeta[Types.DELEGATE].button}
             </Button>:null}
             {this.renderRedelegateButtons()}
@@ -1034,13 +1034,13 @@ class SubmitProposalButton extends LedgerButton {
                     </>
                     ) : ''
                 }
-                {/* <InputGroup>
+                <InputGroup>
                     <Input name="depositAmount" onChange={this.handleInputChange}
                         data-type='coin' placeholder="Amount"
                         min={Coin.MinStake} max={maxAmount.stakingAmount} type="number"
                         invalid={this.state.depositAmount != null && !isBetween(this.state.depositAmount, (new BigNumber(1)).dividedBy(Coin.StakingCoin.fraction), maxAmount)}/>
                     <InputGroupAddon addonType="append">{Coin.StakingCoin.displayName}</InputGroupAddon>
-                </InputGroup> */}
+                </InputGroup>
                 <Input name="memo" onChange={this.handleInputChange}
                     placeholder="Memo(optional)" type="textarea" value={this.state.memo}/>
                 <div>your available balance: <Amount coin={maxAmount}/></div> 

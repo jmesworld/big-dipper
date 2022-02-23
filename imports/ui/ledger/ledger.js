@@ -600,7 +600,7 @@ export class Ledger {
             typeUrl: TYPE_URLS.msgSubmitProposal,
             value: {
                 content: content,
-                initial_deposit: [{
+                initialDeposit: [{
                     amount: deposit.toString(10),
                     denom: txContext.denom
                 }],

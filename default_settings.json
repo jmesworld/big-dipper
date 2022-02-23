@@ -1,5 +1,6 @@
 {
     "public":{
+        "networkType": "",
         "chainName": "CudosNetwork",
         "chainId": "cudos-local-network",
         "gtm": "",
