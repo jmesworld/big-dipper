@@ -22,6 +22,11 @@ timerMissedBlock = 0;
 timerDelegation = 0;
 timerAggregate = 0;
 
+WebApp.connectHandlers.use('/api/_/health', (req, res) => {
+    let currentHeight = Meteor.call('blocks.getCurrentHeight');
+    res.end(currentHeight.toString());
+  });
+  
 const DEFAULTSETTINGS = '/default_settings.json';
 
 updateChainStatus = () => {
