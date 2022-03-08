@@ -299,8 +299,8 @@ export default class Validator extends Component{
                         </Nav>
                         <Switch>
                             <Route exact path="/(validator|validators)/:address" render={() => <div className="power-history">{this.state.history}</div> } />
-                            <Route path="/(validator|validators)/:address/delegations" render={() => <ValidatorDelegations address={this.props.validator.operator_address} tokens={this.props.validator.voting_power} shares={this.props.validator.delegatorShares} denom={this.props.denom} />} />
-                            <Route path="/(validator|validators)/:address/transactions" render={() => <ValidatorTransactions validator={this.props.validator.operator_address} delegator={this.props.validator.delegatorAddress} limit={100}/>} />
+                            <Route path="/(validator|validators)/:address/delegations" render={() => <ValidatorDelegations address={this.props.validator.operator_address} tokens={this.props.validator.tokens} shares={this.props.validator.delegator_shares} denom={this.props.denom} />} />
+                            <Route path="/(validator|validators)/:address/transactions" render={() => <ValidatorTransactions validator={this.props.validator.operator_address} delegator={this.props.validator.delegator_address} limit={100}/>} />
                         </Switch>
 
                         <Link to="/validators" className="btn btn-link"><i className="fas fa-caret-left"></i> <T>common.backToList</T></Link>
