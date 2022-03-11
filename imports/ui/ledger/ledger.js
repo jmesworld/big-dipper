@@ -254,7 +254,7 @@ export class Ledger {
                     // Make sure that the gas prices are higher than the minimum gas prices accepted by chain validators and RPC/REST endpoint.
                     gasPriceStep: {
                         low: Meteor.settings.public.ledger.gasPrice / 2,
-                        average: Meteor.settings.public.ledger.gasPrice / 8,
+                        average: Meteor.settings.public.ledger.gasPrice,
                         high: Meteor.settings.public.ledger.gasPrice * 2
                     },
                     features: ["stargate", "ibc-transfer", "no-legacy-stdTx"]
