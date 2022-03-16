@@ -288,8 +288,8 @@ export default class Proposal extends Component{
                 let percentage = numbro(data.votingPower.dividedBy(total)).format('0.00%');
                 let optionPercentage = numbro(data.votingPower.dividedBy(optionTotal)).format('0.00%');
                 return `<p>Voting Power: ${numbro(data.votingPower.dividedBy(Meteor.settings.public.powerReduction)).format('0,0.0')}</p>
-                        <p>${percentage} out of all votes</p>
-                        <p>${optionPercentage} out of all ${data.option} votes</p>`;
+                        <p>${percentage==='NaN%'?"0.00%":percentage} out of all votes</p>
+                        <p>${optionPercentage==='NaN%'?"0.00%":optionPercentage} out of all ${data.option} votes</p>`;
             } else {
                 let total = ds.metadata().totalVotingPower;
                 let percentage = numbro(data.votingPower.dividedBy(total)).format('0.00%');

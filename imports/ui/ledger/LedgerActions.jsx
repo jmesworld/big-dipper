@@ -705,8 +705,8 @@ class DelegationButtons extends LedgerButton {
     }
 
     getDelegatedToken = (currentDelegation) => {
-        if (currentDelegation && currentDelegation.delegation.shares && currentDelegation.tokenPerShare) {
-            return new Coin(currentDelegation.delegation.shares * currentDelegation.tokenPerShare);
+        if (currentDelegation && currentDelegation.balance.amount && currentDelegation.tokenPerShare) {
+            return new Coin(currentDelegation.balance.amount * currentDelegation.tokenPerShare);
         }
         return null
     }
