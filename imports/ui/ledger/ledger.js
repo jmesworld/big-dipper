@@ -253,9 +253,9 @@ export class Ledger {
                     // Currently, Keplr doesn't support dynamic calculation of the gas prices based on on-chain data.
                     // Make sure that the gas prices are higher than the minimum gas prices accepted by chain validators and RPC/REST endpoint.
                     gasPriceStep: {
-                        low: Meteor.settings.public.ledger.gasPrice / 2,
-                        average: Meteor.settings.public.ledger.gasPrice / 8,
-                        high: Meteor.settings.public.ledger.gasPrice * 2
+                        low: Meteor.settings.public.ledger.gasPrice,
+                        average: Meteor.settings.public.ledger.gasPrice * 2,
+                        high: Meteor.settings.public.ledger.gasPrice * 4
                     },
                     features: ["stargate", "ibc-transfer", "no-legacy-stdTx"]
                 });
