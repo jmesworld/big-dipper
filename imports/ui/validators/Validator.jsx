@@ -17,7 +17,7 @@ import LinkIcon from '../components/LinkIcon.jsx';
 import i18n from 'meteor/universe:i18n';
 import TimeStamp from '../components/TimeStamp.jsx';
 import SentryBoundary from '../components/SentryBoundary.jsx';
-import Coin from '../../../both/utils/coins.js';
+import Coin, { separateDecimals, separateFractions } from '../../../both/utils/coins.js';
 import BigNumber from 'bignumber.js';
 
 const T = i18n.createComponent();
@@ -271,8 +271,8 @@ export default class Validator extends Component{
                                     </Col>
                                     <Col sm={4} className="label"><T>validators.delegatorShares</T></Col>
                                     <Col sm={8} className="value">{numbro(this.props.validator.delegator_shares).format('0,0.00')}</Col>
-                                    {(this.state.currentUserDelegation)?<Col sm={4} className="label"><T>validators.userDelegateShares</T></Col>:''}
-                                    {(this.state.currentUserDelegation)?<Col sm={8} className="value">{numbro(this.state.currentUserDelegation.balance.amount).format('0,0.00')}</Col>:''}
+                                    {(this.state.currentUserDelegation)?<Col sm={4} className="label"><T>validators.userDelegatedAmount</T></Col>:''}
+                                    {(this.state.currentUserDelegation)?<Col sm={8} className="value">{separateDecimals(separateFractions(this.state.currentUserDelegation.balance.amount))}</Col>:''}
                                     <Col sm={4} className="label"><T>validators.tokens</T></Col>
                                     <Col sm={8} className="value">{numbro(this.props.validator.tokens).format('0,0.00')} {Meteor.settings.public.bondDenom}</Col>
                                     {(this.props.validator.jailed)?<Col xs={12} >
