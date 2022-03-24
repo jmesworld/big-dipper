@@ -16,7 +16,7 @@ import { assertIsBroadcastTxSuccess, SigningStargateClient, defaultRegistryTypes
 import {Registry} from "@cosmjs/proto-signing";
 import {MsgSubmitProposal, MsgDeposit, MsgVote} from "../../../cosmos/codec/gov/v1beta1/tx";
 import BigNumber from 'bignumber.js';
-import { cutTrailingZeroes, separateDecimals, separateFractions } from '../../../both/utils/coins.js';
+import { cutTrailingZeroes, separateDecimals, separateFractions } from '../../../both/utils/regex-formatting.js';
 
 const maxHeightModifier = {
     setMaxHeight: {

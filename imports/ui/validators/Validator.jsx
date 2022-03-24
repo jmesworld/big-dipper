@@ -17,7 +17,8 @@ import LinkIcon from '../components/LinkIcon.jsx';
 import i18n from 'meteor/universe:i18n';
 import TimeStamp from '../components/TimeStamp.jsx';
 import SentryBoundary from '../components/SentryBoundary.jsx';
-import Coin, { separateDecimals, separateFractions } from '../../../both/utils/coins.js';
+import { separateDecimals, separateFractions } from '../../../both/utils/regex-formatting.js';
+import Coin from "../../../both/utils/coins.js"
 import BigNumber from 'bignumber.js';
 
 const T = i18n.createComponent();

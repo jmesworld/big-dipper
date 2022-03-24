@@ -5,7 +5,7 @@ import Account from '../components/Account.jsx';
 import { Mongo } from 'meteor/mongo';
 import moment from 'moment';
 import i18n from 'meteor/universe:i18n';
-import { separateDecimals, separateFractions } from '../../../both/utils/coins.js';
+import { separateDecimals, separateFractions } from '../../../both/utils/regex-formatting.js';
 
 const T = i18n.createComponent();
 
