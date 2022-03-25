@@ -777,7 +777,7 @@ class DelegationButtons extends LedgerButton {
         return <TabPane tabId="2">
             <h3>{action} {moniker?moniker:validatorAddress} {target?'to':''} {target}</h3>
             <InputGroup>
-                {(this.state.actionType !== Types.DELEGATE)?<Button color="primary"  onClick={this.setMaxAmount}>{this.state.actionType + " ALL"}</Button>:""};
+                {(this.state.actionType !== Types.DELEGATE)?<Button color="primary"  onClick={this.setMaxAmount}>{this.state.actionType + " ALL"}</Button>:""}
                 <Input 
                     id="delegateAmount" 
                     name="delegateAmount" 
