@@ -10,7 +10,11 @@ export const separateDecimals = (amount) => {
 // For instance: if we have 990099000364464662179907 denoms on the chain =>
 // The human readable form will be 990099.000364464662179907
 export const separateFractions = (amount) => {
-    if (amount.length == 18) {amount = "0" + amount}
+    if (amount.length < 19) {
+        const zero = "0";
+        const zeroTimes = 19 - amount.length;
+        amount = zero.repeat(zeroTimes) + amount;
+    }
     return amount.replace(/(?=(.{18}){1}$)/gm, ".");
 }
 
