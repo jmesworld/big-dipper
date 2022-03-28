@@ -3,7 +3,6 @@ import { HTTP } from 'meteor/http';
 import { Proposals } from '../proposals.js';
 import { Chain } from '../../chain/chain.js';
 import { Validators } from '../../validators/validators.js';
-import BigNumber from 'bignumber.js';
 
 Meteor.methods({
     'proposals.getProposals': function(){
@@ -22,33 +21,53 @@ Meteor.methods({
             // console.log(proposals);
 
             let finishedProposalIds = new Set(Proposals.find(
-                {"proposal_status":{$in:["PROPOSAL_STATUS_PASSED", "PROPOSAL_STATUS_REJECTED", "PROPOSAL_STATUS_REMOVED"]}}
+                {"status":{$in:["PROPOSAL_STATUS_PASSED", "PROPOSAL_STATUS_REJECTED", "PROPOSAL_STATUS_REMOVED"]}}
             ).fetch().map((p)=> p.proposalId));
 
+            let activeProposals = new Set(Proposals.find(
+                { "status": { $in: ["PROPOSAL_STATUS_VOTING_PERIOD"] } }
+            ).fetch().map((p) => p.proposalId));
             let proposalIds = [];
             if (proposals.length > 0){
                 // Proposals.upsert()
                 const bulkProposals = Proposals.rawCollection().initializeUnorderedBulkOp();
                 for (let i in proposals){
                     let proposal = proposals[i];
-
                     proposal.proposalId = parseInt(proposal.proposal_id);
                     proposalIds.push(proposal.proposalId);
                     if (proposal.proposalId > 0 && !finishedProposalIds.has(proposal.proposalId)) {
                         try{
-                            // url = API + '/cosmos/gov/v1beta1/proposals/'+proposal.proposalId+'/proposer';
-                            // let response = HTTP.get(url);
-                            // if (response.statusCode == 200){
-                            //     let proposer = JSON.parse(response.content).result;
-                            //     if (proposer.proposal_id && (proposer.proposal_id == proposal.id)){
-                            //         proposal.proposer = proposer.proposer;
-                            //     }
-                            // }
+                            url = API + '/gov/proposals/'+proposal.proposalId+'/proposer';
+                            let response = HTTP.get(url);
+                            if (response.statusCode == 200){
+                                let proposer = JSON.parse(response?.content)?.result;
+                                if (proposer.proposal_id && (parseInt(proposer.proposal_id) == proposal.proposalId)){
+                                    proposal.proposer = proposer?.proposer;
+                                }
+                            }
+                            if (activeProposals.has(proposal.proposalId)){
+                                let validators = []
+                                let page = 0;
+
+                                do {
+                                    url = RPC + `/validators?page=${++page}&per_page=100`;
+                                    let response = HTTP.get(url);
+                                    result = JSON.parse(response.content).result;
+                                    validators = [...validators, ...result.validators];
+
+                                }
+                                while (validators.length < parseInt(result.total))
+
+                                let activeVotingPower = 0;
+                                for (v in validators) {
+                                    activeVotingPower += parseInt(validators[v].voting_power);
+                                }
+                                proposal.activeVotingPower = activeVotingPower;
+                            }
                             bulkProposals.find({proposalId: proposal.proposalId}).upsert().updateOne({$set:proposal});
                         }
                         catch(e){
                             bulkProposals.find({proposalId: proposal.proposalId}).upsert().updateOne({$set:proposal});
-                            // proposalIds.push(proposal.proposalId);
                             console.log(url);
                             console.log(e.response.content);
                         }
@@ -93,7 +112,7 @@ Meteor.methods({
                         url = API + '/cosmos/gov/v1beta1/proposals/'+proposals[i].proposalId+'/tally';
                         response = HTTP.get(url);
                         if (response.statusCode == 200){
-                            proposal.tally = response.content.tally;
+                            proposal.tally = JSON.parse(response.content).tally;
                         }
 
                         proposal.updatedAt = new Date();
@@ -123,9 +142,9 @@ const getVoteDetail = (votes) => {
         votingPowerMap[validator.delegator_address] = {
             moniker: validator.description.moniker,
             address: validator.address,
-            tokens: new BigNumber(validator.tokens),
-            delegatorShares: new BigNumber(validator.delegator_shares),
-            deductedShares: new BigNumber(validator.delegator_shares)
+            tokens: parseFloat(validator.tokens),
+            delegatorShares: parseFloat(validator.delegator_shares),
+            deductedShares: parseFloat(validator.delegator_shares)
         }
         validatorAddressMap[validator.operator_address] = validator.delegator_address;
     });
@@ -138,23 +157,20 @@ const getVoteDetail = (votes) => {
             try{
                 let response = HTTP.get(url);
                 if (response.statusCode == 200){
-                    delegations = JSON.parse(response.content).delegations_response;
+                    delegations = JSON.parse(response.content).delegation_responses;
                     if (delegations && delegations.length > 0) {
                         delegations.forEach((delegation) => {
-                            let shares = new BigNumber(delegation.delegation.shares);
+                            let shares = parseFloat(delegation.delegation.shares);
                             if (validatorAddressMap[delegation.delegation.validator_address]) {
                                 // deduct delegated shareds from validator if a delegator votes
-                                let validator = votingPowerMap[validatorAddressMap[delegation.validator_address]];
-                                validator.deductedShares = validator.deductedShares.minus(shares);
-                                if (validator.delegatorShares != 0){ // avoiding division by zero
-                                    votingPower = votingPower.plus(shares.dividedBy(validator.delegatorShares).multipliedBy(validator.tokens));
+                                let validator = votingPowerMap[validatorAddressMap[delegation.delegation.validator_address]];
+                                validator.deductedShares -= shares;
+                                if (parseFloat(validator.delegatorShares) != 0){ // avoiding division by zero
+                                    votingPower += (shares / parseFloat(validator.delegatorShares)) * parseFloat(validator.tokens);
                                 }
 
                             } else {
-                                let validator = Validators.findOne({operatorAddress: delegation.validator_address});
-                                if (validator && validator.delegatorShares != 0){ // avoiding division by zero
-                                    votingPower = votingPower.plus(shares.dividedBy(validator.delegatorShares).multipliedBy(validator.tokens));
-                                }
+                                votingPower += shares
                             }
                         });
                     }
@@ -162,18 +178,17 @@ const getVoteDetail = (votes) => {
             }
             catch (e){
                 console.log(url);
-                console.log(e.response.content);
+                console.log(e);
             }
             votingPowerMap[voter] = {votingPower: votingPower};
         }
     });
-
     return votes.map((vote) => {
         let voter = votingPowerMap[vote.voter];
         let votingPower = voter.votingPower;
         if (votingPower == undefined) {
             // voter is a validator
-            votingPower = voter.delegatorShares ? voter.deductedShares.dividedBy(voter.delegatorShares).multipliedBy(voter.tokens) : new BigNumber(0);
+            votingPower = voter.delegatorShares?((parseFloat(voter.deductedShares) / parseFloat(voter.delegatorShares)) * parseFloat(voter.tokens)):0;
         }
         return {...vote, votingPower};
     });
