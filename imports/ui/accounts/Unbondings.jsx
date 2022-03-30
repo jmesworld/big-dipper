@@ -5,6 +5,7 @@ import Account from '../components/Account.jsx';
 import { Mongo } from 'meteor/mongo';
 import moment from 'moment';
 import i18n from 'meteor/universe:i18n';
+import { separateDecimals, separateFractions } from '../../../both/utils/regex-formatting.js';
 
 const T = i18n.createComponent();
 
@@ -34,7 +35,7 @@ export default class AccountUnbondings extends Component{
                             <Col md={7}>{u.entries.map((entry,j) =>
                                 <Row key={j}>
                                     <Col md={6}>
-                                        {numbro(entry.balance).format("0,0")}
+                                        {separateDecimals(separateFractions(entry.balance))}
                                     </Col>
                                     <Col md={6}>
                                         {moment.utc(entry.completion_time).fromNow()}
