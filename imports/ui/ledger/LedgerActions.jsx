@@ -16,7 +16,7 @@ import { assertIsBroadcastTxSuccess, SigningStargateClient, defaultRegistryTypes
 import {Registry} from "@cosmjs/proto-signing";
 import {MsgSubmitProposal, MsgDeposit, MsgVote} from "../../../cosmos/codec/gov/v1beta1/tx";
 import BigNumber from 'bignumber.js';
-import { cutTrailingZeroes, separateDecimals, separateFractions } from '../../../both/utils/regex-formatting.js';
+import { cutFractions, cutTrailingZeroes, separateDecimals, separateFractions } from '../../../both/utils/regex-formatting.js';
 
 const maxHeightModifier = {
     setMaxHeight: {
@@ -435,7 +435,7 @@ class LedgerButton extends Component {
                 break;
             case Ledger.PROPOSAL_TYPES.PROPOSAL_TYPE_COMMUNITY_POOL_SPEND:
                 proposalData.poolRecipient = this.state.poolRecipient;
-                proposalData.poolAmount = this.state.poolAmount;
+                proposalData.poolAmount = this.state.poolAmount + "0".repeat(18);
                 proposalData.poolDenom = Meteor.settings.public.bondDenom;
                 break;
             }
@@ -982,6 +982,9 @@ class SubmitProposalButton extends LedgerButton {
     renderActionTab = () => {
         if (!this.state.currentUser) return null;
         let maxAmount = this.state.currentUser.availableCoin;
+        let maxPoolAmount = cutFractions(localStorage.getItem("communityPoolValue"));
+        let displayMaxPoolAmount = cutFractions(separateFractions(maxPoolAmount))
+        localStorage.setItem("displayMaxPoolAmount", displayMaxPoolAmount)
 
         return (
             <TabPane tabId="2">
@@ -1052,16 +1055,28 @@ class SubmitProposalButton extends LedgerButton {
                         </InputGroup>
                         <InputGroup>
                             <Input name="poolAmount" onChange={this.handleInputChange}
-                                placeholder="Spend amount" type="text"/>
+                                placeholder="Spend amount / whole number" type="number"
+                                data-type='poolSpend'
+                                min={"1"} max={displayMaxPoolAmount}
+                                onKeyDown={event => {if (['e', 'E', '+', "-", ",", "."].includes(event.key)) {event.preventDefault()}}}
+                                onPaste={(e)=>{e.preventDefault()}} 
+                                onCopy={(e)=>{ e.preventDefault()}}
+                                value={this.state.poolAmount}
+                                invalid={this.state.poolAmount != null && !isBetween(this.state.poolAmount, "1", displayMaxPoolAmount)}
+                            />
                             <InputGroupAddon addonType="append">{Coin.StakingCoin.displayName}</InputGroupAddon>
                         </InputGroup>
+                        <small><div>available pool balance: <span style={{ color: 'red', fontWeight: 'lighter' }}>{displayMaxPoolAmount} </span> {Coin.StakingCoin.displayName}</div></small>
                     </>
                     ) : ''
                 }
                 <InputGroup>
                     <Input name="depositAmount" onChange={this.handleInputChange}
-                        data-type='coin' placeholder="Amount"
+                        data-type='coin' placeholder="Deposit amount"
                         min={Coin.MinStake} max={maxAmount.stakingAmount} type="number"
+                        onKeyDown={event => {if (['e', 'E', '+', "-"].includes(event.key)) {event.preventDefault()}}}
+                        onPaste={(e)=>{e.preventDefault()}} 
+                        onCopy={(e)=>{ e.preventDefault()}}
                         invalid={this.state.depositAmount != null && !isBetween(this.state.depositAmount, (new BigNumber(1)).dividedBy(Coin.StakingCoin.fraction), maxAmount)}/>
                     <InputGroupAddon addonType="append">{Coin.StakingCoin.displayName}</InputGroupAddon>
                 </InputGroup>
@@ -1106,8 +1121,23 @@ class SubmitProposalButton extends LedgerButton {
     }
 
     isDataValid = () => {
-        if (!this.state.currentUser) return false
-        return this.state.proposalTitle != null && this.state.proposalDescription != null && isBetween(this.state.depositAmount, (new BigNumber(1)).dividedBy(Coin.StakingCoin.fraction), this.state.currentUser.availableCoin)
+        let isValid = false;
+        let displayMaxPoolAmount = localStorage.getItem("displayMaxPoolAmount");
+
+        if (!this.state.currentUser) return isValid
+
+        isValid = this.state.proposalTitle != null && this.state.proposalTitle != "" &&
+        this.state.proposalDescription != null && this.state.proposalDescription != "" &&
+        this.state.depositAmount != null &&
+        isBetween(this.state.depositAmount, (new BigNumber(1)).dividedBy(Coin.StakingCoin.fraction), this.state.currentUser.availableCoin)
+        
+        if (this.state.proposalType === Ledger.PROPOSAL_TYPES.PROPOSAL_TYPE_COMMUNITY_POOL_SPEND) {
+                // isValid = this.state.proposalTitle != null &&
+                isValid = isValid && 
+                this.state.poolAmount != null && this.state.poolAmount != "" &&
+                isBetween(this.state.poolAmount, "1", displayMaxPoolAmount)
+            }
+        return isValid
     }
 
     getConfirmationMessage = () => {
