@@ -22,3 +22,8 @@ export const separateFractions = (amount) => {
 export const cutTrailingZeroes = (amount) => {
     return amount.replace(/(?<=[\.|\,]\d+?)0+(?=$)/gm, "");
 }
+
+// 990,099.000364464660009000 => 990,099
+export const cutFractions = (amount) => {
+    return amount.replace(/\.[0-9]{18}/gm, "")
+}

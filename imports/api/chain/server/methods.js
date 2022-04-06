@@ -144,7 +144,8 @@ Meteor.methods({
                                 pool.forEach((amount) => {
                                     chainStates.communityPool.push({
                                         denom: amount.denom,
-                                        amount: new BigNumber(amount.amount)
+                                        amount: new BigNumber(amount.amount),
+                                        rawAmount: amount.amount
                                     })
                                 })
                             }
