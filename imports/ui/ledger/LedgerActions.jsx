@@ -214,6 +214,9 @@ class LedgerButton extends Component {
             planName: undefined,
             planHeight: undefined,
             planInfo: undefined,
+            subjectClientId: undefined,
+            substituteClientId: undefined,
+            upgradedClientState: undefined,
             changeSubspace: undefined,
             changeKey: undefined,
             changeValue: undefined,
@@ -432,6 +435,16 @@ class LedgerButton extends Component {
                 proposalData.changeSubspace = this.state.changeSubspace;
                 proposalData.changeKey = this.state.changeKey;
                 proposalData.changeValue = this.state.changeValue;
+                break;
+            case Ledger.PROPOSAL_TYPES.PROPOSAL_TYPE_IBC_UPGRADE:
+                proposalData.planName = this.state.planName;
+                proposalData.planHeight = this.state.planHeight;
+                proposalData.planInfo = this.state.planInfo;
+                proposalData.upgradedClientState = this.state.upgradedClientState;
+                break
+            case Ledger.PROPOSAL_TYPES.PROPOSAL_TYPE_UPDATE_CLIENT:
+                proposalData.subjectClientId = this.state.subjectClientId;
+                proposalData.substituteClientId = this.state.substituteClientId;
                 break;
             case Ledger.PROPOSAL_TYPES.PROPOSAL_TYPE_COMMUNITY_POOL_SPEND:
                 proposalData.poolRecipient = this.state.poolRecipient;
@@ -982,6 +995,18 @@ class SubmitProposalButton extends LedgerButton {
     renderActionTab = () => {
         if (!this.state.currentUser) return null;
         let maxAmount = this.state.currentUser.availableCoin;
+        let fileReader;
+  
+        const handleFileRead = (e) => {
+          const content = fileReader.result;
+          this.state.upgradedClientState = JSON.parse(content);
+        };
+        
+        const handleFileChosen = (file) => {
+          fileReader = new FileReader();
+          fileReader.onloadend = handleFileRead;
+          fileReader.readAsText(file);
+        };
 
         return (
             <TabPane tabId="2">
@@ -1058,10 +1083,61 @@ class SubmitProposalButton extends LedgerButton {
                     </>
                     ) : ''
                 }
+                { this.state.proposalType === Ledger.PROPOSAL_TYPES.PROPOSAL_TYPE_IBC_UPGRADE ?
+                    (<>
+                        <InputGroup>
+                            <Input name="planName" onChange={this.handleInputChange}
+                                placeholder="Upgrade name" type="text"
+                                value={this.state.planName}/>
+                        </InputGroup>
+                        <InputGroup>
+                            <Input name="planHeight" onChange={this.handleInputChange}
+                                placeholder="Target height to upgrade at" type="number"
+                                onKeyDown={event => {if (['e', 'E', '+', "-", ".", ","].includes(event.key)) {event.preventDefault()}}}
+                                value={this.state.planHeight}/>
+                        </InputGroup>
+                        <InputGroup>
+                            <Input name="planInfo" onChange={this.handleInputChange}
+                                placeholder="Upgrade info" type="text"
+                                value={this.state.planInfo}/>
+                        </InputGroup>
+                        <InputGroup style={{marginTop: "20px"}}>
+                        <h5>{"Please select <UpgradedClientState>.json"}</h5>
+                        <Input
+                            name="upgradedClientState"
+                            type='file'
+                            id='file'
+                            className='input-file'
+                            accept='.json'
+                            onChange={e => handleFileChosen(e.target.files[0])}
+                        />
+                        </InputGroup>
+                        <hr/>
+                    </>
+                    ) : ''
+                }
+                { this.state.proposalType === Ledger.PROPOSAL_TYPES.PROPOSAL_TYPE_UPDATE_CLIENT ?
+                    (<>
+                        <InputGroup>
+                            <Input name="subjectClientId" onChange={this.handleInputChange}
+                                placeholder="Subject client ID: `{client-type}-{N}`" type="text"
+                                value={this.state.subjectClientId}/>
+                        </InputGroup>
+                        <InputGroup>
+                            <Input name="substituteClientId" onChange={this.handleInputChange}
+                                placeholder="Substitute client ID: `{client-type}-{N}`" type="text"
+                                value={this.state.substituteClientId}/>
+                        </InputGroup>
+                    </>
+                    ) : ''
+                }
                 <InputGroup>
                     <Input name="depositAmount" onChange={this.handleInputChange}
-                        data-type='coin' placeholder="Amount"
+                        data-type='coin' placeholder="Deposit amount"
                         min={Coin.MinStake} max={maxAmount.stakingAmount} type="number"
+                        onKeyDown={event => {if (['e', 'E', '+', "-"].includes(event.key)) {event.preventDefault()}}}
+                        onPaste={(e)=>{e.preventDefault()}} 
+                        onCopy={(e)=>{ e.preventDefault()}}
                         invalid={this.state.depositAmount != null && !isBetween(this.state.depositAmount, (new BigNumber(1)).dividedBy(Coin.StakingCoin.fraction), maxAmount)}/>
                     <InputGroupAddon addonType="append">{Coin.StakingCoin.displayName}</InputGroupAddon>
                 </InputGroup>
@@ -1084,6 +1160,10 @@ class SubmitProposalButton extends LedgerButton {
             return 'Community pool spend';
         case Ledger.PROPOSAL_TYPES.PROPOSAL_TYPE_CANCEL_SOFTWARE_UPDATE:
             return 'Cancel software update';
+        case Ledger.PROPOSAL_TYPES.PROPOSAL_TYPE_UPDATE_CLIENT:
+            return 'Update client';
+        case Ledger.PROPOSAL_TYPES.PROPOSAL_TYPE_IBC_UPGRADE:
+            return 'IBC upgrade';
         }
     }
 
