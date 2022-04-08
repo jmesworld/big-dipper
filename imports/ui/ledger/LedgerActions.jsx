@@ -1333,7 +1333,9 @@ class ProposalActionButtons extends LedgerButton {
     }
 
     render = () => {
-        return <span className="ledger-buttons-group float-right">
+        return this.props.proposalStatus === 'PROPOSAL_STATUS_DEPOSIT_PERIOD'|| 
+        this.props.proposalStatus === 'PROPOSAL_STATUS_VOTING_PERIOD'?
+        <span className="ledger-buttons-group float-right">
             <Row>
                 {this.props.voteStarted ? 
                     <Col><Button color="secondary" size="sm"
@@ -1347,7 +1349,7 @@ class ProposalActionButtons extends LedgerButton {
                 </Button></Col>
             </Row>
             {this.renderModal()}
-        </span>;
+        </span>:null;
     }
 }
 export {
