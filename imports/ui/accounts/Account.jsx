@@ -24,6 +24,9 @@ class AccountDetails extends Component{
         const defaultCoin = Meteor.settings.public.coins.map(coin => new Coin(0, coin.denom))
 
         this.state = {
+            API: Meteor.settings.public.urls.api,
+            isWasmContract: false,
+            contractInfo: {},
             address: props.match.params.address,
             loading: true,
             accountExists: false,
@@ -187,6 +190,7 @@ class AccountDetails extends Component{
 
     componentDidMount(){
         this.getBalance();
+        this.checkContract();
     }
 
     componentDidUpdate(prevProps){
@@ -252,6 +256,21 @@ class AccountDetails extends Component{
         return <LinkIcon link={primaryLink} otherLinks={otherLinks} />
     }
 
+    checkContract() {
+        fetch(this.state.API+"/wasm/contract/"+this.state.address)
+        .then(data => {
+        return data.json();
+        })
+        .then(response => {
+            if (response.result != null) {
+                this.setState({
+                    isWasmContract: true,
+                    contractInfo: response.result
+                })
+            }
+        });
+    }
+
 
 
     findCoin(coins){
@@ -291,11 +310,41 @@ class AccountDetails extends Component{
                 <Row>
                     <Col><h3 className="text-primary"><AccountCopy address={this.state.address} /></h3></Col>
                 </Row>
+                {this.state.isWasmContract?
+                <Row>
+                    <Col>
+                        <Card>
+                            <CardHeader>
+                                <div className="rewards infinity" /><T>accounts.smartContract</T>
+                                <div className="shareLink float-right">{this.renderShareLink()}</div>
+                            </CardHeader>
+                            <CardBody>
+                                <Row>
+                                    <Col md={6} lg={8}>
+                                        <Row>
+                                            <Col xs={2} className="label text-nowrap"><T>accounts.label</T></Col>
+                                            <Col xs={8} className="value text-right">{this.state.contractInfo.label}</Col>
+                                        </Row>
+                                        <Row>
+                                            <Col xs={2} className="label text-nowrap"><T>accounts.codeId</T></Col>
+                                            <Col xs={8} className="value text-right">{this.state.contractInfo.code_id}</Col>
+                                        </Row>
+                                        <Row>
+                                            <Col xs={2} className="label text-nowrap"><T>accounts.owner</T></Col>
+                                            <Col xs={8} className="value text-right"><AccountCopy address={this.state.contractInfo.creator} /></Col>
+                                        </Row>
+                                    </Col>
+                                </Row>
+                            </CardBody>
+                        </Card>
+                    </Col>
+                </Row>
+                :null}
                 <Row>
                     <Col><Card>
                         <CardHeader>
                             Balance
-                            <div className="shareLink float-right">{this.renderShareLink()}</div>
+                            {this.state.isWasmContract?null:<div className="shareLink float-right">{this.renderShareLink()}</div>}
                             {(this.state.available.length > 1) ? <div className="coin-dropdown float-right"><h5>Select Coin:</h5> {this.renderDropDown()}</div> : null}
                         </CardHeader>
                         <CardBody><br/> 

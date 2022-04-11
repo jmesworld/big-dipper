@@ -232,6 +232,10 @@ votingPower:
     pareto: 'Pareto Principle (20/80 rule)'
     minValidators34: 'Min no. of validators hold 34%+ power'
 accounts:
+    smartContract: 'Smart Contract'
+    codeId: 'Code ID'
+    label: 'Label'
+    owner: 'Owner'
     accountDetails: 'Account Details'
     available: 'Available'
     delegated: 'Delegated'
