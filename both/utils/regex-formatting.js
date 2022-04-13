@@ -20,7 +20,7 @@ export const separateFractions = (amount) => {
 
 // 990,099.000364464660009000 => 990,099.000364464660009
 export const cutTrailingZeroes = (amount) => {
-    return amount.replace(/(?<=[\.|\,]\d+?)0+(?=$)/gm, "");
+    return amount.replace(/(\.0+|0+)$/gm, "");
 }
 
 // 990,099.000364464660009000 => 990,099
