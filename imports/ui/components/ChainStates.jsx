@@ -70,6 +70,10 @@ export default class ChainStates extends Component{
  
 
     renderValues(propsValue){
+        if (propsValue.length > 0) {
+            localStorage.setItem("communityPoolValue", propsValue[0].rawAmount);
+        }
+        
         let poolValues = [];
         propsValue.map((pool,i) => {
             poolValues[i] = new Coin(pool.amount, pool.denom).toString(4)  

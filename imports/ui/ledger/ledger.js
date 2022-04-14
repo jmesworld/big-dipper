@@ -20,8 +20,8 @@ import { VoteOption, TextProposal } from "../../../cosmos/codec/gov/v1beta1/gov"
 import { Plan, SoftwareUpgradeProposal, CancelSoftwareUpgradeProposal} from '../../../cosmos/codec/upgrade/upgrade';
 import { ParameterChangeProposal } from '../../../cosmos/codec/params/v1beta1/params';
 import { CommunityPoolSpendProposal, CommunityPoolSpendProposalWithDeposit } from '@cosmjs/stargate/build/codec/cosmos/distribution/v1beta1/distribution'
-import { ClientUpdateProposal } from '@cosmjs/stargate/build/codec/ibc/core/client/v1/client';
-import numbro from 'numbro';
+import { UpgradeProposal, ClientUpdateProposal } from '../../../ibc-go/codec/client';
+import { encode, decode } from "uint8-to-base64";
 
 // TODO: discuss TIMEOUT value
 const INTERACTION_TIMEOUT = 10000
@@ -34,12 +34,14 @@ const TYPE_URLS = {
     msgSend: "/cosmos.bank.v1beta1.MsgSend",
     msgWithdraw: "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward",
     msgSubmitProposal: "/cosmos.gov.v1beta1.MsgSubmitProposal",
+    ClientStateType: "/ibc.lightclients.tendermint.v1.ClientState",
     proposalTypeCancelSoftwareUpgradeProposal: "/cosmos.upgrade.v1beta1.CancelSoftwareUpgradeProposal",
     proposalTypeSoftwareUpgradeProposal: "/cosmos.upgrade.v1beta1.SoftwareUpgradeProposal",
     proposalTypeTextProposal: "/cosmos.gov.v1beta1.TextProposal",
     proposalTypeParameterChangeProposal: "/cosmos.params.v1beta1.ParameterChangeProposal",
     proposalTypeCommunityPoolSpendProposal: "/cosmos.distribution.v1beta1.CommunityPoolSpendProposal",
     proposalTypeClientUpdateProposal: "/ibc.core.client.v1.ClientUpdateProposal",
+    proposalTypeIbcUpgradeProposal: "/ibc.core.client.v1.UpgradeProposal",
 }
 
 export const DEFAULT_GAS_PRICE = parseFloat(Meteor.settings.public.ledger.gasPrice) || 0.025;
@@ -85,6 +87,8 @@ export class Ledger {
         PROPOSAL_TYPE_CANCEL_SOFTWARE_UPDATE: 3,
         PROPOSAL_TYPE_PARAM_CHANGE: 4,
         PROPOSAL_TYPE_COMMUNITY_POOL_SPEND: 5,
+        PROPOSAL_TYPE_UPDATE_CLIENT: 6,
+        PROPOSAL_TYPE_IBC_UPGRADE: 7,
     }
 
     constructor({ testModeAllowed }) {
@@ -608,7 +612,6 @@ export class Ledger {
             }
         }];
 
-
         return {msgAny, memo: txContext.memo, fee: Meteor.settings.public.fees.redelegate};
     }
 
@@ -701,6 +704,35 @@ function getProposalContent(proposalData){
                 }]
             }).finish()
         }
+    case Ledger.PROPOSAL_TYPES.PROPOSAL_TYPE_IBC_UPGRADE:
+        return {
+            typeUrl: TYPE_URLS.proposalTypeIbcUpgradeProposal,
+            value: UpgradeProposal.encode({
+                title: proposalData.proposalTitle,
+                description: proposalData.proposalDescription,
+                plan: {
+                    name: proposalData.planName,
+                    height: Long.fromString(proposalData.planHeight),
+                    info: proposalData.planInfo
+                },
+                upgradedClientState: {
+                    typeUrl: TYPE_URLS.ClientStateType,
+                    value: encode(proposalData.upgradedClientState)
+                }
+            }).finish()
+        }
+
+    case Ledger.PROPOSAL_TYPES.PROPOSAL_TYPE_UPDATE_CLIENT:
+        return {
+            typeUrl: TYPE_URLS.proposalTypeClientUpdateProposal,
+            value: ClientUpdateProposal.encode({
+                title: proposalData.proposalTitle,
+                description: proposalData.proposalDescription,
+                subjectClientId: proposalData.subjectClientId,
+                substituteClientId: proposalData.substituteClientId,
+            }).finish()
+        }
+
     case Ledger.PROPOSAL_TYPES.PROPOSAL_TYPE_COMMUNITY_POOL_SPEND:
         return {
             typeUrl: TYPE_URLS.proposalTypeCommunityPoolSpendProposal,
@@ -757,4 +789,3 @@ function getVoteOptionIntValue(option){
         return VoteOption.VOTE_OPTION_NO_WITH_VETO;
     } 
 }
-

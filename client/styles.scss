@@ -1007,7 +1007,8 @@ body {
   .ledger-modal-tab .tab-pane {
     .amount, .coin {
       color: orangered;
-      font-weight: 500;
+      font-weight: 200;
+      font-size: 90%;
     }
   
     .gas {

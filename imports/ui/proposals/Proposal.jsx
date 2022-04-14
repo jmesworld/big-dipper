@@ -192,8 +192,8 @@ export default class Proposal extends Component{
             [GlobalVariables.VOTE_TYPES.NO_WITH_VETO]: 3
         };
 
-        let emptyMaxVotingPower = {'N/A': new BigNumber(0)};
-        let emptyTotalVotingPower = {'N/A': new BigNumber(1)};
+        let emptyMaxVotingPower = new BigNumber(1);
+        let emptyTotalVotingPower = new BigNumber(0);
         let emptyData = [{'votingPower': new BigNumber(0), option: 'N/A'}];
         let datasets = [];
         let isDataEmtpy = null;
@@ -237,6 +237,7 @@ export default class Proposal extends Component{
             let totalVotingPower = finalTallyResult.yes.plus(finalTallyResult.abstain).plus(finalTallyResult.no).plus(finalTallyResult.no_with_veto).dividedBy(Meteor.settings.public.powerReduction);
             totalVotingPower = totalVotingPower.comparedTo(0) == 1 ? totalVotingPower : emptyTotalVotingPower;
 
+           
             datasets.push({
                 datasetId: 'All',
                 data: totalVotingPower.comparedTo(0) == 1 ? [{'votingPower': totalVotingPower, option: 'All'}] : emptyData,
@@ -294,7 +295,7 @@ export default class Proposal extends Component{
                 let total = ds.metadata().totalVotingPower;
                 let percentage = numbro(data.votingPower.dividedBy(total)).format('0.00%');
                 return `<p>Voting Power: ${numbro(data.votingPower.toString()).format('0,0.0')}</p>
-                        <p>${percentage} out of all votes</p>`;
+                        <p>${percentage==='NaN%'?"0.00%":percentage} out of all votes</p>`;
             }
         }
 
@@ -364,7 +365,7 @@ export default class Proposal extends Component{
                         <span className="d-inline-block d-md-none d-lg-inline-block"><T>common.votingPower</T> %</span>
                     </Col>
                 </Row></Card>:""}
-                {votes.map((vote, i) =>
+                {  votes.map((vote, i) =>
                     <Card body key={i}><Row className='voter-info'>
                         <Col className="d-none d-md-block counter data" md={1}>{i+1}</Col>
                         <Col className="moniker data" md={4}>
@@ -405,7 +406,7 @@ export default class Proposal extends Component{
                         <Row className="mb-2 border-top">
                             <Col md={3} className="label"><T>proposals.proposalId</T></Col>
                             <Col md={this.state.user?6:9} className="value">{this.props.proposal.proposalId}</Col>
-                            {this.state.user?<Col md={3}><ProposalActionButtons voteStarted={this.state.voteStarted} history={this.props.history} proposalId={proposalId}/></Col>:null} 
+                            {this.state.user?<Col md={3}><ProposalActionButtons voteStarted={this.state.voteStarted} history={this.props.history} proposalId={proposalId} proposalStatus={this.props.proposal.status}/></Col>:null} 
                         </Row>
                         { this.props.proposal.deposits?.length > 0 && (
                             <Row className="mb-2 border-top">

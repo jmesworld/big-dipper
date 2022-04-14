@@ -16,6 +16,7 @@ import { assertIsBroadcastTxSuccess, SigningStargateClient, defaultRegistryTypes
 import {Registry} from "@cosmjs/proto-signing";
 import {MsgSubmitProposal, MsgDeposit, MsgVote} from "../../../cosmos/codec/gov/v1beta1/tx";
 import BigNumber from 'bignumber.js';
+import { cutFractions, cutTrailingZeroes, separateDecimals, separateFractions } from '../../../both/utils/regex-formatting.js';
 
 const maxHeightModifier = {
     setMaxHeight: {
@@ -128,7 +129,7 @@ const Amount = (props) => {
     let coin = props.coin || new Coin(props.amount, props.denom).toString(4);
     let amount = (props.mint)?Math.round(coin.amount):coin.stakingAmount;
     let denom = (props.mint)?Coin.StakingCoin.denom:Coin.StakingCoin.displayName;
-    return <span><span className={props.className || 'amount'}>{numbro(amount).format("0,0.0000")}</span> <span className='denom'>{denom}</span></span>
+    return <span><span className={props.className || 'amount'}>{separateDecimals(amount.valueOf())}</span> <span className='denom'>{denom}</span></span>
 }
 
 const Fee = (props) => {
@@ -201,6 +202,7 @@ class LedgerButton extends Component {
             transferTarget: undefined,
             transferAmount: undefined,
             success: undefined,
+            useMaxAmount: undefined,
             targetValidator: undefined,
             simulating: undefined,
             gasEstimate: undefined,
@@ -212,6 +214,9 @@ class LedgerButton extends Component {
             planName: undefined,
             planHeight: undefined,
             planInfo: undefined,
+            subjectClientId: undefined,
+            substituteClientId: undefined,
+            upgradedClientState: undefined,
             changeSubspace: undefined,
             changeKey: undefined,
             changeValue: undefined,
@@ -431,9 +436,19 @@ class LedgerButton extends Component {
                 proposalData.changeKey = this.state.changeKey;
                 proposalData.changeValue = this.state.changeValue;
                 break;
+            case Ledger.PROPOSAL_TYPES.PROPOSAL_TYPE_IBC_UPGRADE:
+                proposalData.planName = this.state.planName;
+                proposalData.planHeight = this.state.planHeight;
+                proposalData.planInfo = this.state.planInfo;
+                proposalData.upgradedClientState = this.state.upgradedClientState;
+                break
+            case Ledger.PROPOSAL_TYPES.PROPOSAL_TYPE_UPDATE_CLIENT:
+                proposalData.subjectClientId = this.state.subjectClientId;
+                proposalData.substituteClientId = this.state.substituteClientId;
+                break;
             case Ledger.PROPOSAL_TYPES.PROPOSAL_TYPE_COMMUNITY_POOL_SPEND:
                 proposalData.poolRecipient = this.state.poolRecipient;
-                proposalData.poolAmount = this.state.poolAmount;
+                proposalData.poolAmount = this.state.poolAmount + "0".repeat(18);
                 proposalData.poolDenom = Meteor.settings.public.bondDenom;
                 break;
             }
@@ -544,16 +559,26 @@ class LedgerButton extends Component {
         }
     }
 
-    handleInputChange = (e) => {
+    setMaxAmount = () => {
+        let maxValue = separateFractions(this.props.currentDelegation.balance.amount);
+        const transferValue = new Coin(maxValue, Coin.StakingCoin.displayName);
+        maxValue = cutTrailingZeroes(maxValue);
+        this.setState({delegateAmount: transferValue, useMaxAmount: true}, () => {
+            var el = document.getElementById("delegateAmount");
+            el.value=maxValue;
+      });
+    }
+
+    handleInputChange = (e) => {       
         let target = e.currentTarget;
         let dataset = target.dataset;
         let value;
         switch (dataset.type) {
         case 'validator':
-            value = { moniker: dataset.moniker, operator_address: dataset.address}
+            value = { moniker: dataset.moniker, operator_address: dataset.address};
             break;
         case 'coin':
-            value = new Coin(target.value, target.nextSibling.innerText)
+            value = new Coin(target.value, target.nextSibling.innerText);
             break;
         case 'type':
             value = parseInt(target.value);
@@ -561,7 +586,7 @@ class LedgerButton extends Component {
         default:
             value = target.value;
         }
-        this.setState({[target.name]: value});
+        this.setState({[target.name]: value, useMaxAmount: false});
     }
 
     redirectToSignin = () => {
@@ -583,7 +608,8 @@ class LedgerButton extends Component {
         if (this.state.activeTab === '1')
             return <Button color="primary"  onClick={this.redirectToSignin}>Sign in With Keplr</Button> //onClick={this.tryConnect}>Continue</Button>
         if (this.state.activeTab === '2')
-            return <Button color="primary"  disabled={this.state.simulating || !this.isDataValid()} onClick={this.simulate}>
+            return this.state.useMaxAmount? <Button color="primary" onClick={this.simulate}>{'Next'}</Button>:
+            <Button color="primary"  disabled={this.state.simulating || !this.isDataValid()} onClick={this.simulate}>
                 {(this.state.errorMessage !== '')?'Retry':'Next'}
             </Button>
         if (this.state.activeTab === '3')
@@ -764,10 +790,21 @@ class DelegationButtons extends LedgerButton {
         return <TabPane tabId="2">
             <h3>{action} {moniker?moniker:validatorAddress} {target?'to':''} {target}</h3>
             <InputGroup>
-                <Input name="delegateAmount" onChange={this.handleInputChange} data-type='coin' addon={false}
-                    placeholder="Amount" min={Coin.MinStake} max={maxAmount.stakingAmount} type="number"
-                    invalid={this.state.delegateAmount != null && !isBetween(this.state.delegateAmount, (new BigNumber(1)).dividedBy(Coin.StakingCoin.fraction), maxAmount)} />
-                <InputGroupAddon addonType="append">{Coin.StakingCoin.displayName}</InputGroupAddon>
+                {(this.state.actionType !== Types.DELEGATE)?<Button color="primary"  onClick={this.setMaxAmount}>{this.state.actionType + " ALL"}</Button>:""}
+                <Input 
+                    id="delegateAmount" 
+                    name="delegateAmount" 
+                    onChange={this.handleInputChange} 
+                    data-type='coin' addon={false}
+                    placeholder="Amount" 
+                    min={Coin.MinStake} 
+                    max={maxAmount.stakingAmount} 
+                    type="number" 
+                    onKeyDown={event => {if (['e', 'E', '+', "-"].includes(event.key)) {event.preventDefault()}}}
+                    onPaste={(e)=>{e.preventDefault()}} 
+                    onCopy={(e)=>{ e.preventDefault()}}
+                    invalid={this.state.useMaxAmount?!this.state.useMaxAmount:this.state.delegateAmount != null && !isBetween(this.state.delegateAmount, (new BigNumber(1)).dividedBy(Coin.StakingCoin.fraction), maxAmount)} />
+                <InputGroupAddon addonType="append">{Coin.StakingCoin.displayName}</InputGroupAddon>        
             </InputGroup>
             <Input name="memo" onChange={this.handleInputChange}
                 placeholder="Memo(optional)" type="textarea" value={this.state.memo}/>
@@ -958,6 +995,21 @@ class SubmitProposalButton extends LedgerButton {
     renderActionTab = () => {
         if (!this.state.currentUser) return null;
         let maxAmount = this.state.currentUser.availableCoin;
+        let maxPoolAmount = cutFractions(localStorage.getItem("communityPoolValue"));
+        let displayMaxPoolAmount = cutFractions(separateFractions(maxPoolAmount))
+        localStorage.setItem("displayMaxPoolAmount", displayMaxPoolAmount)
+        let fileReader;
+  
+        const handleFileRead = (e) => {
+          const content = fileReader.result;
+          this.state.upgradedClientState = JSON.parse(content);
+        };
+        
+        const handleFileChosen = (file) => {
+          fileReader = new FileReader();
+          fileReader.onloadend = handleFileRead;
+          fileReader.readAsText(file);
+        };
 
         return (
             <TabPane tabId="2">
@@ -1028,16 +1080,76 @@ class SubmitProposalButton extends LedgerButton {
                         </InputGroup>
                         <InputGroup>
                             <Input name="poolAmount" onChange={this.handleInputChange}
-                                placeholder="Spend amount" type="text"/>
+                                placeholder="Spend amount / whole number" type="number"
+                                data-type='poolSpend'
+                                min={"1"} max={displayMaxPoolAmount}
+                                onKeyDown={event => {if (['e', 'E', '+', "-", ",", "."].includes(event.key)) {event.preventDefault()}}}
+                                onPaste={(e)=>{e.preventDefault()}} 
+                                onCopy={(e)=>{ e.preventDefault()}}
+                                value={this.state.poolAmount}
+                                invalid={this.state.poolAmount != null && !isBetween(this.state.poolAmount, "1", displayMaxPoolAmount)}
+                            />
                             <InputGroupAddon addonType="append">{Coin.StakingCoin.displayName}</InputGroupAddon>
+                        </InputGroup>
+                        <small><div>available pool balance: <span style={{ color: 'red', fontWeight: 'lighter' }}>{displayMaxPoolAmount} </span> {Coin.StakingCoin.displayName}</div></small>
+                    </>
+                    ) : ''
+                }
+                { this.state.proposalType === Ledger.PROPOSAL_TYPES.PROPOSAL_TYPE_IBC_UPGRADE ?
+                    (<>
+                        <InputGroup>
+                            <Input name="planName" onChange={this.handleInputChange}
+                                placeholder="Upgrade name" type="text"
+                                value={this.state.planName}/>
+                        </InputGroup>
+                        <InputGroup>
+                            <Input name="planHeight" onChange={this.handleInputChange}
+                                placeholder="Target height to upgrade at" type="number"
+                                onKeyDown={event => {if (['e', 'E', '+', "-", ".", ","].includes(event.key)) {event.preventDefault()}}}
+                                value={this.state.planHeight}/>
+                        </InputGroup>
+                        <InputGroup>
+                            <Input name="planInfo" onChange={this.handleInputChange}
+                                placeholder="Upgrade info" type="text"
+                                value={this.state.planInfo}/>
+                        </InputGroup>
+                        <InputGroup style={{marginTop: "20px"}}>
+                        <h5>{"Please select <UpgradedClientState>.json"}</h5>
+                        <Input
+                            name="upgradedClientState"
+                            type='file'
+                            id='file'
+                            className='input-file'
+                            accept='.json'
+                            onChange={e => handleFileChosen(e.target.files[0])}
+                        />
+                        </InputGroup>
+                        <hr/>
+                    </>
+                    ) : ''
+                }
+                { this.state.proposalType === Ledger.PROPOSAL_TYPES.PROPOSAL_TYPE_UPDATE_CLIENT ?
+                    (<>
+                        <InputGroup>
+                            <Input name="subjectClientId" onChange={this.handleInputChange}
+                                placeholder="Subject client ID: `{client-type}-{N}`" type="text"
+                                value={this.state.subjectClientId}/>
+                        </InputGroup>
+                        <InputGroup>
+                            <Input name="substituteClientId" onChange={this.handleInputChange}
+                                placeholder="Substitute client ID: `{client-type}-{N}`" type="text"
+                                value={this.state.substituteClientId}/>
                         </InputGroup>
                     </>
                     ) : ''
                 }
                 <InputGroup>
                     <Input name="depositAmount" onChange={this.handleInputChange}
-                        data-type='coin' placeholder="Amount"
+                        data-type='coin' placeholder="Deposit amount"
                         min={Coin.MinStake} max={maxAmount.stakingAmount} type="number"
+                        onKeyDown={event => {if (['e', 'E', '+', "-"].includes(event.key)) {event.preventDefault()}}}
+                        onPaste={(e)=>{e.preventDefault()}} 
+                        onCopy={(e)=>{ e.preventDefault()}}
                         invalid={this.state.depositAmount != null && !isBetween(this.state.depositAmount, (new BigNumber(1)).dividedBy(Coin.StakingCoin.fraction), maxAmount)}/>
                     <InputGroupAddon addonType="append">{Coin.StakingCoin.displayName}</InputGroupAddon>
                 </InputGroup>
@@ -1060,6 +1172,10 @@ class SubmitProposalButton extends LedgerButton {
             return 'Community pool spend';
         case Ledger.PROPOSAL_TYPES.PROPOSAL_TYPE_CANCEL_SOFTWARE_UPDATE:
             return 'Cancel software update';
+        case Ledger.PROPOSAL_TYPES.PROPOSAL_TYPE_UPDATE_CLIENT:
+            return 'Update client';
+        case Ledger.PROPOSAL_TYPES.PROPOSAL_TYPE_IBC_UPGRADE:
+            return 'IBC upgrade';
         }
     }
 
@@ -1082,8 +1198,23 @@ class SubmitProposalButton extends LedgerButton {
     }
 
     isDataValid = () => {
-        if (!this.state.currentUser) return false
-        return this.state.proposalTitle != null && this.state.proposalDescription != null && isBetween(this.state.depositAmount, (new BigNumber(1)).dividedBy(Coin.StakingCoin.fraction), this.state.currentUser.availableCoin)
+        let isValid = false;
+        let displayMaxPoolAmount = localStorage.getItem("displayMaxPoolAmount");
+
+        if (!this.state.currentUser) return isValid
+
+        isValid = this.state.proposalTitle != null && this.state.proposalTitle != "" &&
+        this.state.proposalDescription != null && this.state.proposalDescription != "" &&
+        this.state.depositAmount != null &&
+        isBetween(this.state.depositAmount, (new BigNumber(1)).dividedBy(Coin.StakingCoin.fraction), this.state.currentUser.availableCoin)
+        
+        if (this.state.proposalType === Ledger.PROPOSAL_TYPES.PROPOSAL_TYPE_COMMUNITY_POOL_SPEND) {
+                // isValid = this.state.proposalTitle != null &&
+                isValid = isValid && 
+                this.state.poolAmount != null && this.state.poolAmount != "" &&
+                isBetween(this.state.poolAmount, "1", displayMaxPoolAmount)
+            }
+        return isValid
     }
 
     getConfirmationMessage = () => {
@@ -1202,7 +1333,9 @@ class ProposalActionButtons extends LedgerButton {
     }
 
     render = () => {
-        return <span className="ledger-buttons-group float-right">
+        return this.props.proposalStatus === 'PROPOSAL_STATUS_DEPOSIT_PERIOD'|| 
+        this.props.proposalStatus === 'PROPOSAL_STATUS_VOTING_PERIOD'?
+        <span className="ledger-buttons-group float-right">
             <Row>
                 {this.props.voteStarted ? 
                     <Col><Button color="secondary" size="sm"
@@ -1216,7 +1349,7 @@ class ProposalActionButtons extends LedgerButton {
                 </Button></Col>
             </Row>
             {this.renderModal()}
-        </span>;
+        </span>:null;
     }
 }
 export {

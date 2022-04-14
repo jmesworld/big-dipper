@@ -1,5 +1,20 @@
 # Changelog
 
+## [v0.42.0]
+### Bug fixes and improvements
+* CUDOS-885 fixing lookbehind regex for safe working on Safari browser
+* CUDOS-811 Ecommunity spend proposal has wrong units
+* CUDOS-787 tally result metrics does not work in specific case
+* CUDOS-741 delegation number rounding problem
+* CUDOS-740 elegated amount / delegator shares change key on UI
+* CUDOS-737 The tally results are not displayed while proposal voting is ongoing
+* CUDOS-727 Redelegate & Undelegate Issue
+* CUDOS-708 Shows (some) failed txs as successful
+### Features
+* CUDOS-772 Implement UndelegateAll/DelegateAll button to v1 Explorer
+* CUDOS-860 Display smart contract by address
+* CUDOS-789 Adding IBC-Upgrade and Update client proposals
+
 ## [UNRELEASED]
 * [#523] Implemented readable messages for IBC messages
 
