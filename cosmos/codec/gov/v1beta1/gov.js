@@ -18,10 +18,10 @@ exports.TallyParams = exports.VotingParams = exports.DepositParams = exports.Vot
 /* eslint-disable */
 var long_1 = __importDefault(require("long"));
 var minimal_1 = __importDefault(require("protobufjs/minimal"));
-var any_1 = require("@cosmjs/stargate/build/codec/google/protobuf/any");
-var duration_1 = require("@cosmjs/stargate/build/codec/google/protobuf/duration");
-var timestamp_1 = require("@cosmjs/stargate/build/codec/google/protobuf/timestamp");
-var coin_1 = require("@cosmjs/stargate/build/codec/cosmos/base/v1beta1/coin");
+var any_1 = require("cosmjs-types/google/protobuf/any");
+var duration_1 = require("cosmjs-types/google/protobuf/duration");
+var timestamp_1 = require("cosmjs-types/google/protobuf/timestamp");
+var coin_1 = require("cosmjs-types/cosmos/base/v1beta1/coin");
 exports.protobufPackage = "cosmos.gov.v1beta1";
 /** VoteOption enumerates the valid vote votes for a given governance proposal. */
 var VoteOption;

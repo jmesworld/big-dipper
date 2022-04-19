@@ -26,10 +26,6 @@ import { Link } from 'react-router-dom';
 import SearchBar from './SearchBar.jsx';
 import i18n from 'meteor/universe:i18n';
 import LedgerModal from '../ledger/LedgerModal.jsx';
-import Account from './Account.jsx';
-import { DirectSecp256k1HdWallet, Registry } from "@cosmjs/proto-signing";
-import { assertIsBroadcastTxSuccess, SigningStargateClient, StargateClient } from "@cosmjs/stargate";
-import { MsgDelegate } from "@cosmjs/stargate/build/codec/cosmos/staking/v1beta1/tx"; 
 import { Ledger } from '../ledger/ledger.js';
 
 const T = i18n.createComponent();
