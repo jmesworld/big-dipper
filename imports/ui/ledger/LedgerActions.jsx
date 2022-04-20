@@ -1000,7 +1000,7 @@ class MultiSendButton extends LedgerButton {
         this.setState({
             multisendRows: [...this.state.multisendRows, item],
         });
-        this.scr.scrollIntoView({ behavior: "smooth", block: 'nearest', inline: 'start' });
+        setTimeout(() => { this.scr.scrollIntoView({ behavior: "smooth", block: 'nearest', inline: 'start' }) }, 200);
     };
 
     scrollToBottom = () => {
