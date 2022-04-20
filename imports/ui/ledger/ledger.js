@@ -4,6 +4,7 @@
 import 'babel-polyfill';
 
 import Long from "long";
+import BigNumber from 'bignumber.js';
 import TransportWebUSB from "@ledgerhq/hw-transport-webusb";
 import CosmosApp from "ledger-cosmos-js"
 import { signatureImport } from "secp256k1"
@@ -14,9 +15,10 @@ import sha256 from "crypto-js/sha256"
 import ripemd160 from "crypto-js/ripemd160"
 import CryptoJS from "crypto-js"
 import { MsgDelegate, MsgUndelegate, MsgBeginRedelegate } from "@cosmjs/stargate/build/codec/cosmos/staking/v1beta1/tx"; 
-import { MsgSend } from "@cosmjs/stargate/build/codec/cosmos/bank/v1beta1/tx"; 
+import { MsgSend, MsgMultiSend } from "@cosmjs/stargate/build/codec/cosmos/bank/v1beta1/tx"; 
 import { MsgWithdrawDelegatorReward } from "@cosmjs/stargate/build/codec/cosmos/distribution/v1beta1/tx";
 import { VoteOption, TextProposal } from "../../../cosmos/codec/gov/v1beta1/gov";
+import { MsgVoteWeighted } from "../../../cosmos/codec/gov/v1beta1/tx";
 import { Plan, SoftwareUpgradeProposal, CancelSoftwareUpgradeProposal} from '../../../cosmos/codec/upgrade/upgrade';
 import { ParameterChangeProposal } from '../../../cosmos/codec/params/v1beta1/params';
 import { CommunityPoolSpendProposal, CommunityPoolSpendProposalWithDeposit } from '@cosmjs/stargate/build/codec/cosmos/distribution/v1beta1/distribution'
@@ -32,6 +34,7 @@ const TYPE_URLS = {
     msgUndelegate:"/cosmos.staking.v1beta1.MsgUndelegate",
     msgRedelegate: "/cosmos.staking.v1beta1.MsgBeginRedelegate",
     msgSend: "/cosmos.bank.v1beta1.MsgSend",
+    msgMultiSend: "/cosmos.bank.v1beta1.MsgMultiSend",
     msgWithdraw: "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward",
     msgSubmitProposal: "/cosmos.gov.v1beta1.MsgSubmitProposal",
     ClientStateType: "/ibc.lightclients.tendermint.v1.ClientState",
@@ -591,6 +594,40 @@ export class Ledger {
         return {msgAny, memo: txContext.memo, fee: Meteor.settings.public.fees.redelegate};
     }
 
+    static createMultiTransfer(
+        txContext,
+        multiSend,
+    ) {
+
+        let totalAmountDue = 0;
+        multiSend.forEach((recipient) => {
+            totalAmountDue += parseInt(recipient.cudos)
+        })
+        const msgAny = [{    
+            typeUrl: TYPE_URLS.msgMultiSend,
+            value: MsgMultiSend.fromPartial({
+                inputs: [
+                  {
+                    address: txContext.bech32,
+                    coins: [{
+                        denom: "acudos",
+                        amount: (totalAmountDue * 10 ** 18).toLocaleString('fullwide', {useGrouping:false})
+                    }]
+                  }
+                ],
+                outputs: multiSend.map((item) => ({
+                    address: item.recipient,
+                    coins: [{
+                        denom: "acudos",
+                        amount: (item.cudos * 10 ** 18).toLocaleString('fullwide', {useGrouping:false})
+                    }]
+                })),
+            }),
+        }];
+
+        return {msgAny, memo: txContext.memo, fee: Meteor.settings.public.fees.redelegate};
+    }
+
 
     static createSubmitProposal(
         txContext,
@@ -633,6 +670,50 @@ export class Ledger {
             }
         }];
 
+        return {msgAny, memo: txContext.memo, fee: Meteor.settings.public.fees.redelegate};
+    }
+
+    static createWeightedVote(
+        txContext,
+        proposalId,
+        yesOption,
+        abstainOption,
+        noOption,
+        vetoOption
+    ) {
+        let regularWeight = new BigNumber(1000000000000000000n);
+        let currentOptions = [
+            {
+                option: VoteOption.VOTE_OPTION_YES,
+                weight: (regularWeight * (yesOption / 100)).toString()
+            },
+            {
+                option: VoteOption.VOTE_OPTION_ABSTAIN,
+                weight: (regularWeight * (abstainOption / 100)).toString()
+            },
+            {
+                option: VoteOption.VOTE_OPTION_NO,
+                weight: (regularWeight * (noOption / 100)).toString()
+            },
+            {
+                option: VoteOption.VOTE_OPTION_NO_WITH_VETO,
+                weight: (regularWeight * (vetoOption / 100)).toString()
+            },
+        ]
+
+        let options = []
+        currentOptions.forEach((vote) => {
+            if (vote.weight !== '0') { options.push(vote) }
+        });
+
+        const msgAny = [{
+            typeUrl: "/cosmos.gov.v1beta1.MsgVoteWeighted",
+            value: MsgVoteWeighted.fromPartial({
+                proposalId: new Long(proposalId),
+                voter: txContext.bech32,
+                options: options
+            })
+        }];
         return {msgAny, memo: txContext.memo, fee: Meteor.settings.public.fees.redelegate};
     }
 

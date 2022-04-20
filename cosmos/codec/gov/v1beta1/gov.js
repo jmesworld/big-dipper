@@ -157,12 +157,12 @@ function proposalStatusToJSON(object) {
     }
 }
 exports.proposalStatusToJSON = proposalStatusToJSON;
-var baseWeightedVoteOption = { vote: 0, weight: "" };
+var baseWeightedVoteOption = { option: 0, weight: "" };
 exports.WeightedVoteOption = {
     encode: function (message, writer) {
         if (writer === void 0) { writer = minimal_1["default"].Writer.create(); }
-        if (message.vote !== 0) {
-            writer.uint32(8).int32(message.vote);
+        if (message.option !== 0) {
+            writer.uint32(8).int32(message.option);
         }
         if (message.weight !== "") {
             writer.uint32(18).string(message.weight);
@@ -214,11 +214,11 @@ exports.WeightedVoteOption = {
     },
     fromPartial: function (object) {
         var message = __assign({}, baseWeightedVoteOption);
-        if (object.vote !== undefined && object.vote !== null) {
-            message.vote = object.vote;
+        if (object.option !== undefined && object.option !== null) {
+            message.option = object.option;
         }
         else {
-            message.vote = 0;
+            message.option = 0;
         }
         if (object.weight !== undefined && object.weight !== null) {
             message.weight = object.weight;
