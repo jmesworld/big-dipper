@@ -622,7 +622,7 @@ export class Ledger {
             }),
         }];
 
-        return {msgAny, memo: txContext.memo, fee: Meteor.settings.public.fees.redelegate};
+        return {msgAny, memo: txContext.memo};
     }
 
 
@@ -711,7 +711,7 @@ export class Ledger {
                 options: options
             })
         }];
-        return {msgAny, memo: txContext.memo, fee: Meteor.settings.public.fees.redelegate};
+        return {msgAny, memo: txContext.memo};
     }
 
 
