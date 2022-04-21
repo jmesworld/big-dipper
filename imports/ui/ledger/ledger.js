@@ -5,25 +5,22 @@ import 'babel-polyfill';
 
 import Long from "long";
 import BigNumber from 'bignumber.js';
-import TransportWebUSB from "@ledgerhq/hw-transport-webusb";
-import CosmosApp from "ledger-cosmos-js"
 import { signatureImport } from "secp256k1"
-import { Validators } from '/imports/api/validators/validators.js';
-import semver from "semver"
 import bech32 from "bech32";
 import sha256 from "crypto-js/sha256"
 import ripemd160 from "crypto-js/ripemd160"
 import CryptoJS from "crypto-js"
-import { MsgDelegate, MsgUndelegate, MsgBeginRedelegate } from "@cosmjs/stargate/build/codec/cosmos/staking/v1beta1/tx"; 
-import { MsgSend, MsgMultiSend } from "@cosmjs/stargate/build/codec/cosmos/bank/v1beta1/tx"; 
-import { MsgWithdrawDelegatorReward } from "@cosmjs/stargate/build/codec/cosmos/distribution/v1beta1/tx";
+import { MsgDelegate, MsgUndelegate, MsgBeginRedelegate } from "cosmjs-types/cosmos/staking/v1beta1/tx"; 
+import { MsgSend, MsgMultiSend } from "cosmjs-types/cosmos/bank/v1beta1/tx"; 
+import { MsgWithdrawDelegatorReward } from 'cosmjs-types/cosmos/distribution/v1beta1/tx';
 import { VoteOption, TextProposal } from "../../../cosmos/codec/gov/v1beta1/gov";
 import { MsgVoteWeighted } from "../../../cosmos/codec/gov/v1beta1/tx";
-import { Plan, SoftwareUpgradeProposal, CancelSoftwareUpgradeProposal} from '../../../cosmos/codec/upgrade/upgrade';
+import { SoftwareUpgradeProposal, CancelSoftwareUpgradeProposal} from '../../../cosmos/codec/upgrade/upgrade';
 import { ParameterChangeProposal } from '../../../cosmos/codec/params/v1beta1/params';
-import { CommunityPoolSpendProposal, CommunityPoolSpendProposalWithDeposit } from '@cosmjs/stargate/build/codec/cosmos/distribution/v1beta1/distribution'
+import { CommunityPoolSpendProposal } from 'cosmjs-types/cosmos/distribution/v1beta1/distribution';
 import { UpgradeProposal, ClientUpdateProposal } from '../../../ibc-go/codec/client';
-import { encode, decode } from "uint8-to-base64";
+import { encode } from "uint8-to-base64";
+import { GasPrice } from "@cosmjs/launchpad";
 
 // TODO: discuss TIMEOUT value
 const INTERACTION_TIMEOUT = 10000
@@ -260,9 +257,9 @@ export class Ledger {
                     // Currently, Keplr doesn't support dynamic calculation of the gas prices based on on-chain data.
                     // Make sure that the gas prices are higher than the minimum gas prices accepted by chain validators and RPC/REST endpoint.
                     gasPriceStep: {
-                        low: Meteor.settings.public.ledger.gasPrice,
-                        average: Meteor.settings.public.ledger.gasPrice * 2,
-                        high: Meteor.settings.public.ledger.gasPrice * 4
+                        low: parseInt(GasPrice.fromString(Meteor.settings.public.ledger.gasPrice).amount.toString()),
+                        average: parseInt(GasPrice.fromString(Meteor.settings.public.ledger.gasPrice).amount.toString()) * 2,
+                        high: parseInt(GasPrice.fromString(Meteor.settings.public.ledger.gasPrice).amount.toString()) * 4,
                     },
                     features: ["stargate", "ibc-transfer", "no-legacy-stdTx"]
                 });
@@ -506,7 +503,7 @@ export class Ledger {
             }),
         }];
 
-        return {msgAny, memo: txContext.memo, fee: Meteor.settings.public.fees.delegate};
+        return {msgAny, memo: txContext.memo};
     }
 
     // Creates a new undelegation tx based on the input parameters
@@ -529,7 +526,7 @@ export class Ledger {
             memo: txContext.memo,
         }];
 
-        return {msgAny, memo: txContext.memo, fee: Meteor.settings.public.fees.undelegate};
+        return {msgAny, memo: txContext.memo};
     }
 
     // Creates a new redelegation tx based on the input parameters
@@ -554,7 +551,7 @@ export class Ledger {
             memo: txContext.memo,
         }];
 
-        return {msgAny, memo: txContext.memo, fee: Meteor.settings.public.fees.redelegate};
+        return {msgAny, memo: txContext.memo};
     }
 
     static async createWithdraw(txContext, validators){
@@ -568,7 +565,7 @@ export class Ledger {
             })
         }));
 
-        return {msgAny, memo: txContext.memo, fee: Meteor.settings.public.fees.redelegate};
+        return {msgAny, memo: txContext.memo};
     }
 
     // Creates a new transfer tx based on the input parameters
@@ -591,7 +588,7 @@ export class Ledger {
             }),
         }];
 
-        return {msgAny, memo: txContext.memo, fee: Meteor.settings.public.fees.redelegate};
+        return {msgAny, memo: txContext.memo};
     }
 
     static createMultiTransfer(
@@ -649,7 +646,7 @@ export class Ledger {
             }
         }];
 
-        return {msgAny, memo: txContext.memo, fee: Meteor.settings.public.fees.redelegate};
+        return {msgAny, memo: txContext.memo};
     }
 
     static createVote(
@@ -670,7 +667,7 @@ export class Ledger {
             }
         }];
 
-        return {msgAny, memo: txContext.memo, fee: Meteor.settings.public.fees.redelegate};
+        return {msgAny, memo: txContext.memo};
     }
 
     static createWeightedVote(
@@ -734,7 +731,7 @@ export class Ledger {
             },
         }]; 
 
-        return {msgAny, memo: txContext.memo, fee: Meteor.settings.public.fees.redelegate};
+        return {msgAny, memo: txContext.memo};
     }
 
 }

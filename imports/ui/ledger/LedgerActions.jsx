@@ -12,12 +12,11 @@ import Coin from '/both/utils/coins.js';
 import numbro from 'numbro';
 import TimeStamp from '../components/TimeStamp.jsx';
 import { PropTypes } from 'prop-types';
-import { assertIsBroadcastTxSuccess, SigningStargateClient, defaultRegistryTypes } from "@cosmjs/stargate";
+import { assertIsDeliverTxSuccess, SigningStargateClient, defaultRegistryTypes } from "@cosmjs/stargate";
 import {Registry} from "@cosmjs/proto-signing";
 import {MsgSubmitProposal, MsgDeposit, MsgVote, MsgVoteWeighted} from "../../../cosmos/codec/gov/v1beta1/tx";
 import BigNumber from 'bignumber.js';
 import { cutFractions, cutTrailingZeroes, separateDecimals, separateFractions } from '../../../both/utils/regex-formatting.js';
-import { send } from 'process';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -25,6 +24,10 @@ import TableContainer from '@mui/material/TableContainer';
 import TableRow from '@mui/material/TableRow';
 import TableFooter from '@mui/material/TableFooter';
 import Tooltip from "react-simple-tooltip";
+import { GasPrice } from "@cosmjs/launchpad";
+import amino from "@cosmjs/amino";
+import math from "@cosmjs/math";
+
 
 const maxHeightModifier = {
     setMaxHeight: {
@@ -216,6 +219,12 @@ class LedgerButton extends Component {
         };
 
         this.ledger = new Ledger({testModeAllowed: false});
+
+        window.keplr.defaultOptions = {
+            sign: {
+                preferNoSetFee: true,
+            }
+        };
     }
 
     close = () => {
@@ -561,6 +570,20 @@ class LedgerButton extends Component {
         })
     }
 
+    calculateFee = (gasLimit, { denom, amount: gasPriceAmount }) => {
+        const amount = Math.ceil(gasPriceAmount.multiply(new math.Uint53(gasLimit)).toFloatApproximation());
+        return {
+            amount: (0, amino.coins)(amount.toString(), denom),
+            gas: gasLimit.toString(),
+        };
+    }
+
+    estimateFee = async (client, gasPrice, signerAddress, messages, memo = "") => {
+        const multiplier = 1.3;
+        const gasEstimation = await client.simulate(signerAddress, messages, memo);
+        return (0, this.calculateFee)(Math.round(gasEstimation * multiplier), gasPrice);
+    }
+
     sign = async (txMsg) => {
         if (this.state.signing) {
             return;
@@ -575,7 +598,7 @@ class LedgerButton extends Component {
         ]);
 
         this.initStateOnLoad('signing')
-
+        
         try {
             const chainId = Meteor.settings.public.chainId;
             await window.keplr.enable(chainId);
@@ -589,14 +612,16 @@ class LedgerButton extends Component {
 
             const account = (await offlineSigner.getAccounts())[0];
 
+            const fee = await this.estimateFee(client, GasPrice.fromString(Meteor.settings.public.ledger.gasPrice), account.address, txMsg.msgAny, txMsg.memo);
+
             const result = await client.signAndBroadcast(
                 account.address,
                 txMsg.msgAny,
-                txMsg.fee,
+                fee,
                 txMsg.memo,
             );
             
-            assertIsBroadcastTxSuccess(result);
+            assertIsDeliverTxSuccess(result);
 
             this.setStateOnSuccess('signing', {
                 txHash: result,

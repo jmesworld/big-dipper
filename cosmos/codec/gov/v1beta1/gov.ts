@@ -1,10 +1,10 @@
 /* eslint-disable */
 import Long from "long";
 import _m0 from "protobufjs/minimal";
-import { Any } from "@cosmjs/stargate/build/codec/google/protobuf/any";
-import { Duration } from "@cosmjs/stargate/build/codec/google/protobuf/duration";
-import { Timestamp } from "@cosmjs/stargate/build/codec/google/protobuf/timestamp";
-import { Coin } from "@cosmjs/stargate/build/codec/cosmos/base/v1beta1/coin";
+import { Any } from "cosmjs-types/google/protobuf/any";
+import { Duration } from "cosmjs-types/google/protobuf/duration";
+import { Timestamp } from "cosmjs-types/google/protobuf/timestamp";
+import { Coin } from "cosmjs-types/cosmos/base/v1beta1/coin";
 
 export const protobufPackage = "cosmos.gov.v1beta1";
 

@@ -1,7 +1,7 @@
 /* eslint-disable */
 import * as Long from "long";
 import { util, configure, Writer, Reader } from "protobufjs/minimal";
-import { Any } from "@cosmjs/stargate/build/codec/google/protobuf/any";
+import { Any } from "cosmjs-types/google/protobuf/any";
 import { Plan } from "../../cosmos/codec/upgrade/v1beta1/upgrade";
 export const protobufPackage = "ibc.core.client.v1";
 const baseIdentifiedClientState = { clientId: "" };
