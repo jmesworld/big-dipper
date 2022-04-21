@@ -283,6 +283,7 @@ messageTypes:
     submitProposal: 'Submit Proposal'
     deposit: 'Deposit'
     vote: 'Vote'
+    weightedVote: 'Weighted Vote'
     withdrawComission: 'Withdraw Commission'
     withdrawReward: 'Withdraw Reward'
     modifyWithdrawAddress: 'Modify Withdraw Address'

@@ -31,6 +31,8 @@ export const MsgType = (props) => {
         return <Badge color="info"><T>messageTypes.deposit</T></Badge>
     case "/cosmos.gov.v1beta1.MsgVote":
         return <Badge color="info"><T>messageTypes.vote</T></Badge>;
+    case "/cosmos.gov.v1beta1.MsgVoteWeighted":
+        return <Badge color="info"><T>messageTypes.weightedVote</T></Badge>;
         
         // distribution
     case "/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommission":

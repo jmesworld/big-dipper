@@ -14,9 +14,17 @@ import TimeStamp from '../components/TimeStamp.jsx';
 import { PropTypes } from 'prop-types';
 import { assertIsBroadcastTxSuccess, SigningStargateClient, defaultRegistryTypes } from "@cosmjs/stargate";
 import {Registry} from "@cosmjs/proto-signing";
-import {MsgSubmitProposal, MsgDeposit, MsgVote} from "../../../cosmos/codec/gov/v1beta1/tx";
+import {MsgSubmitProposal, MsgDeposit, MsgVote, MsgVoteWeighted} from "../../../cosmos/codec/gov/v1beta1/tx";
 import BigNumber from 'bignumber.js';
 import { cutFractions, cutTrailingZeroes, separateDecimals, separateFractions } from '../../../both/utils/regex-formatting.js';
+import { send } from 'process';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableRow from '@mui/material/TableRow';
+import TableFooter from '@mui/material/TableFooter';
+import Tooltip from "react-simple-tooltip";
 
 const maxHeightModifier = {
     setMaxHeight: {
@@ -33,8 +41,10 @@ const Types = {
     UNDELEGATE: 'undelegate',
     WITHDRAW: 'withdraw',
     SEND: 'send',
+    MULTISEND: 'multiSend',
     SUBMITPROPOSAL: 'submitProposal',
     VOTE: 'vote',
+    WEIGHTEDVOTE: 'weightedVote',
     DEPOSIT: 'deposit'
 }
 
@@ -77,7 +87,15 @@ const TypeMeta = {
         gasAdjustment: '1.6'
     },
     [Types.SEND]: {
-        button: 'transfer',
+        button: 'single transfer',
+        button_other: 'send',
+        pathPreFix: 'bank/accounts',
+        pathSuffix: 'transfers',
+        warning: '',
+        gasAdjustment: '1.8'
+    },
+    [Types.MULTISEND]: {
+        button: 'multi send',
         button_other: 'send',
         pathPreFix: 'bank/accounts',
         pathSuffix: 'transfers',
@@ -91,6 +109,12 @@ const TypeMeta = {
     },
     [Types.VOTE]: {
         button: 'vote',
+        pathPreFix: 'gov/proposals',
+        pathSuffix: 'votes',
+        gasAdjustment: '2.5'
+    },
+    [Types.WEIGHTEDVOTE]: {
+        button: 'weighted vote',
         pathPreFix: 'gov/proposals',
         pathSuffix: 'votes',
         gasAdjustment: '2.5'
@@ -177,13 +201,18 @@ class LedgerButton extends Component {
     constructor(props) {
         super(props);
         this.state = {
+            multisendRows: [{},{}],
             activeTab: '2',
             errorMessage: '',
             user: localStorage.getItem(CURRENTUSERADDR),
             pubKey: localStorage.getItem(CURRENTUSERPUBKEY),
             memo: DEFAULT_MEMO,
             proposalType: Ledger.PROPOSAL_TYPES.PROPOSAL_TYPE_TEXT,
-            validator: false
+            validator: false,
+            yesOption: 0,
+            noOption: 0,
+            abstainOption: 0,
+            vetoOption: 0
         };
 
         this.ledger = new Ledger({testModeAllowed: false});
@@ -191,6 +220,11 @@ class LedgerButton extends Component {
 
     close = () => {
         this.setState({
+            multisendRows: [{},{}],
+            yesOption: 0,
+            noOption: 0,
+            abstainOption: 0,
+            vetoOption: 0,
             activeTab: '2',
             errorMessage: '',
             isOpen: false,
@@ -414,6 +448,11 @@ class LedgerButton extends Component {
                 this.state.transferTarget,
                 this.state.transferAmount.amount);
             break;
+        case Types.MULTISEND:
+            txMsg = Ledger.createMultiTransfer(
+                this.getTxContext(),
+                this.state.multisendRows);
+            break;
         case Types.SUBMITPROPOSAL:
             let proposalData = {
                 proposalTitle: this.state.proposalTitle, 
@@ -463,6 +502,15 @@ class LedgerButton extends Component {
                 this.getTxContext(),
                 this.props.proposalId,
                 this.state.voteOption);
+            break;
+        case Types.WEIGHTEDVOTE:
+            txMsg = Ledger.createWeightedVote(
+                this.getTxContext(),
+                this.props.proposalId,
+                this.state.yesOption,
+                this.state.abstainOption,
+                this.state.noOption,
+                this.state.vetoOption);
             break;
         case Types.DEPOSIT:
             txMsg = Ledger.createDeposit(
@@ -522,6 +570,7 @@ class LedgerButton extends Component {
             ["/cosmos.gov.v1beta1.MsgSubmitProposal", MsgSubmitProposal],
             ["/cosmos.gov.v1beta1.MsgDeposit", MsgDeposit],
             ["/cosmos.gov.v1beta1.MsgVote", MsgVote],
+            ["/cosmos.gov.v1beta1.MsgVoteWeighted", MsgVoteWeighted]
             // Replace with your own type URL and Msg class
         ]);
 
@@ -581,6 +630,9 @@ class LedgerButton extends Component {
             value = new Coin(target.value, target.nextSibling.innerText);
             break;
         case 'type':
+            value = parseInt(target.value);
+            break;
+        case 'weightedVote':
             value = parseInt(target.value);
             break;
         default:
@@ -698,7 +750,7 @@ class LedgerButton extends Component {
     }
 
     renderModal = () => {
-        return  <Modal isOpen={this.state.isOpen} toggle={this.close} className="ledger-modal">
+        return  <Modal style={this.state.multisendRows.length<4?{maxHeight: "350px !important"}:{}} isOpen={this.state.isOpen} toggle={this.close} className={this.state.actionType === 'multiSend'?"ledger-modal multi-send-modal":"ledger-modal"}>
             <ModalBody>
                 <TabContent className='ledger-modal-tab' activeTab={this.state.activeTab}>
                     <TabPane tabId="0">Please connect your Keplr wallet.</TabPane>
@@ -925,6 +977,254 @@ class WithdrawButton extends LedgerButton {
                 onClick={() => this.openModal(Types.WITHDRAW)}>
                 {TypeMeta[Types.WITHDRAW].button}
             </Button>
+            {this.renderModal()}
+        </span>;
+    }
+}
+
+class MultiSendButton extends LedgerButton {
+    handleChange = idx => e => {
+        const { name, value } = e.target;
+        const multisendRows = [...this.state.multisendRows];
+        multisendRows[idx][name] = value;
+
+        this.setState({
+            multisendRows,
+        });
+    };
+    handleAddRow = () => {
+        const item = {
+            recipient: "",
+            cudos: ""
+        };
+        this.setState({
+            multisendRows: [...this.state.multisendRows, item],
+        });
+        setTimeout(() => { this.scr.scrollIntoView({ behavior: "smooth", block: 'nearest', inline: 'start' }) }, 200);
+    };
+
+    scrollToBottom = () => {
+
+    }
+
+    handleRemoveSpecificRow = (idx) => () => {
+        const multisendRows = [...this.state.multisendRows]
+        multisendRows.splice(idx, 1);
+        this.setState({ multisendRows });
+    }
+    
+    MultiSendTotal = () => {
+        let total = 0;
+        this.state.multisendRows.forEach((recipient) => {
+            const amount = parseInt(recipient.cudos);
+            if (isNaN(amount)) {
+                total += 0
+            } else { total += amount }
+        })
+        return total?total:0;
+    }
+
+    handleCsvClick = () => {
+        document.getElementById("csv-file").click();
+    }
+
+    renderActionTab = () => {
+        if (!this.state.currentUser) return null;
+
+        let fileReader;
+  
+        const handleFileRead = (e) => {
+            let invdalidData = false;
+            const content = fileReader.result.split('\n');
+            
+            let txBatch = [];
+            for (let line of content) {
+                line = line.trim();
+                if (line.length === 0) { invdalidData = true; break };
+
+                const columns = line.split(',');
+                if (columns.length !== 2) { invdalidData = true; break };
+                
+                const recipient = columns[0]
+                const amount = parseInt(columns[1])
+                if (recipient === undefined || recipient === '' || amount === undefined || amount === 0) { invdalidData = true; break };
+     
+                const item = {
+                    recipient: recipient,
+                    cudos: amount.toString()
+                };
+
+                txBatch.push(item)
+            }
+        
+            this.setState({
+                multisendRows: txBatch,
+            });
+
+            this.openModal(Types.MULTISEND, {})
+        };
+        
+        const handleFileChosen = (file) => {
+          fileReader = new FileReader();
+          fileReader.onloadend = handleFileRead;
+          fileReader.readAsText(file);
+        };
+
+        const toolTip = '<address>, <amount>\n<address>, <amount>'
+        return (
+            <>    
+            <TableContainer id="multiSendTable" sx={this.state.multisendRows.length<5?
+                {
+                height: '350px',
+                marginBottom: "5px",
+                overflow: "auto",
+                }:{
+                marginBottom: "5px",
+                display: "flex",
+                height: '350px',
+                overflow: "auto",
+                }}> 
+                <Table sx={this.state.multisendRows.length===1?{ position: "sticky", top: "50%", height: "max-content" }:{ position: "sticky", top: "25%", height: "max-content" }}>
+                    <TableBody>
+                    {this.state.multisendRows.map((item, idx) => (
+                        <TableRow key={idx} ref={e => this.scr = e}>
+                            <TableCell style={{ width:"0%", textAlign: "center",verticalAlign: "middle" }} >{idx+1}</TableCell>
+                            <TableCell>
+                                <Input
+                                type="text"
+                                name="recipient address"
+                                placeholder="address"
+                                value={this.state.multisendRows[idx].recipient}
+                                onPaste={this.handleChange(idx)}
+                                onChange={this.handleChange(idx)}
+                                className="form-control"
+                                />
+                            </TableCell>
+                            <TableCell style={{ width:"20%" }}>
+                                <Input
+                                style={{textAlign: "center"}}
+                                type="number"
+                                name="cudos"
+                                placeholder="amount"
+                                onKeyDown={event => {if (['e', 'E', '+', "-", ".", ","].includes(event.key)) {event.preventDefault()}}}
+                                onPaste={(e)=>{e.preventDefault()}} 
+                                onCopy={(e)=>{ e.preventDefault()}}
+                                min={1}
+                                value={this.state.multisendRows[idx].cudos}
+                                onChange={this.handleChange(idx)}
+                                className="form-control"
+                                />
+                            </TableCell>
+                            <TableCell style={{ width:"10%", textAlign: "center",verticalAlign: "middle" }}>
+                                <Button
+                                hidden={idx===0?true:false}
+                                className="btn btn-outline-danger btn-sm"
+                                onClick={this.handleRemoveSpecificRow(idx)}
+                                >
+                                X
+                                </Button>
+                            </TableCell>
+                        </TableRow>
+                        
+                    ))}
+                    </TableBody>
+                </Table>
+                </TableContainer>
+                <Table style ={{position: "absolute", left: "31%", bottom: "23%"}}>
+                <TableFooter>
+                        <TableRow >
+                        <TableCell style={{ border: "none", textAlign: "right",verticalAlign: "middle" }}>Total:</TableCell>
+                        <TableCell style={{ width:"0%", textAlign: "center",verticalAlign: "middle" }}>{this.MultiSendTotal()}</TableCell>
+                        <TableCell style={{ border: "none" }}>CUDOS</TableCell>
+                        </TableRow>
+                </TableFooter>
+                </Table>
+                <Button onClick={this.handleAddRow} className="btn btn-primary">
+                    Add Row
+                </Button>
+                <Tooltip
+                    style = {{width: "300px"}}
+                    arrow="0"
+                    radius="5"
+                    content={toolTip}
+                    background="#1B2031"
+                    border="#1B2031"
+                    fontSize="12px"
+                >
+                    <Button style = {{ marginLeft: "10px", display: "inline-flex", alignItems: "center", textTransform: "lowercase"}} onClick={this.handleCsvClick} className="btn btn-sm">
+                        Upload from .CSV
+                    </Button>
+                </Tooltip>
+                <Input
+                    name="multiSendCsv"
+                    type='file'
+                    id='csv-file'
+                    className='csv-file'
+                    accept='.csv'
+                    onChange={e => handleFileChosen(e.target.files[0])}
+                    hidden
+                />
+                <Input name="memo" onChange={this.handleInputChange}
+                    placeholder="Memo(optional)" type="textarea" value={this.state.memo}/>
+                <div><span style={this.notEnoughBalance()?{ fontWeight: 'lighter', color: 'red' }:{ fontWeight: 'lighter' }}>your available balance: <Amount coin={this.state.currentUser.availableCoin}/></span></div>
+            </>
+        );
+    }
+
+    supportAction(action) {
+        return action === Types.MULTISEND;
+    }
+
+    filterParams(params) {
+        return {
+            transferTarget: params.transferTarget
+        }
+    }
+
+    notEnoughBalance = () => {
+        const userBalance = parseInt(this.state.currentUser.availableCoin.stakingAmount.toString())
+        return this.MultiSendTotal() > userBalance;
+    }
+
+    isDataValid = () => {
+        if (!this.state.currentUser) return false;
+        if (this.state.actionType === 'multiSend') {   
+            if (this.notEnoughBalance()) return false
+
+            let validData = true;
+            this.state.multisendRows.forEach((row) => {
+                const recipient = row.recipient;
+                const amount = row.cudos;
+                
+                if (recipient === undefined || recipient === '' || amount === undefined || amount === '' || amount < '1') {
+                    validData = false;
+                } else {
+                    const addressCheck = row.recipient.replace(/^cudos[0-9a-z]{39}$/gm, 'OK');
+                    const amountCheck = row.cudos.replace(/^[0-9]+$/gm, 'OK');
+                    if (addressCheck !== 'OK' || amountCheck !== 'OK') {
+                        validData = false;
+                    };
+                };
+            });
+            return validData
+        };
+        return isBetween(this.state.transferAmount, (new BigNumber(1)).dividedBy(Coin.StakingCoin.fraction), this.state.currentUser.availableCoin)
+    };
+
+    getConfirmationMessage = () => {
+        return <span>You are going to <span className='action'>send</span> <Amount coin={this.state.transferAmount}/> to {this.state.transferTarget}
+            <span> with <Fee gas={this.state.gasEstimate}/>.</span>
+        </span>
+    }
+
+    render = () => {
+        let params = {};
+        let button = TypeMeta[Types.MULTISEND].button;
+        if (this.props.address !== this.state.user) {
+            params = {transferTarget: this.props.address}
+        }
+        return <span className="ledger-buttons-group float-right">
+            <Button color="info" size="sm" onClick={() => this.openModal(Types.MULTISEND, params)}> {button} </Button>
             {this.renderModal()}
         </span>;
     }
@@ -1239,6 +1539,22 @@ class SubmitProposalButton extends LedgerButton {
 }
 
 class ProposalActionButtons extends LedgerButton {
+    isValidRange = () => {
+        return (this.state.yesOption + this.state.noOption + this.state.vetoOption + this.state.abstainOption) === 100;
+    }
+
+    totalVote = () => {
+        return this.state.yesOption + this.state.noOption + this.state.vetoOption + this.state.abstainOption;
+    }
+
+    resetVotes = () => {
+        this.setState({
+            yesOption: 0,
+            noOption: 0,
+            vetoOption: 0,
+            abstainOption: 0
+        })
+    }
 
     renderActionTab = () => {
         if (!this.state.currentUser) return null;
@@ -1247,6 +1563,72 @@ class ProposalActionButtons extends LedgerButton {
         let inputs;
         let title;
         switch (this.state.actionType) {
+        case Types.WEIGHTEDVOTE:
+            title=`Distributed Vote on Proposal ${this.props.proposalId}`
+            inputs = (
+                <div>
+                    <h4 style={this.totalVote()===100?{color: "green"}:null}>Casted TOTAL VOTE: {this.totalVote()}%</h4>
+                    <InputGroup>
+                        <br />  
+                        <div>YES: {this.state.yesOption}%</div>
+                        <Input 
+                            data-type='weightedVote'
+                            name="yesOption" 
+                            onChange={this.handleInputChange}
+                            min={0}
+                            max={100}
+                            value={this.state.yesOption}                        
+                            type="range"
+                            disabled={this.isValidRange()?true:false}
+                            />
+                        <br />
+                        <div>NO: {this.state.noOption}%</div>
+                        <Input 
+                            data-type='weightedVote'
+                            name="noOption" 
+                            onChange={this.handleInputChange}
+                            min={0}
+                            max={this.setMaxValidity}
+                            value={this.state.noOption}                        
+                            type="range"
+                            disabled={this.isValidRange()?true:false}
+                            />
+                        <br />
+                        <div>VETO: {this.state.vetoOption}%</div>
+                        <Input 
+                            data-type='weightedVote'
+                            name="vetoOption" 
+                            onChange={this.handleInputChange}
+                            min={0}
+                            max={this.setMaxValidity}
+                            value={this.state.vetoOption}                        
+                            type="range"
+                            disabled={this.isValidRange()?true:false}
+                            />
+                        <br />
+                        <div>ABSTAIN: {this.state.abstainOption}%</div>
+                        <Input 
+                            data-type='weightedVote'
+                            name="abstainOption" 
+                            onChange={this.handleInputChange}
+                            min={0}
+                            max={100}
+                            value={this.state.abstainOption}                        
+                            type="range"
+                            disabled={this.isValidRange()?true:false}
+                            />
+                        <br />
+                        {!this.isValidRange()?
+                            <small style={{color: "red"}}>Total vote from all options should match 100%</small>:
+                            <div>
+                                <small style={{color: "green", paddingRight: "10px"}}>Total vote from all options matches 100%</small>
+                                <Button size="sm" color="secondary" onClick={this.resetVotes}>Reset</Button>
+                            </div>}  
+                        <br />   
+                    </InputGroup>       
+                </div>       
+            )
+            break;
         case Types.VOTE:
             title=`Vote on Proposal ${this.props.proposalId}`
             inputs = (<Input type="select" name="voteOption" onChange={this.handleInputChange} defaultValue=''>
@@ -1271,6 +1653,7 @@ class ProposalActionButtons extends LedgerButton {
         }
         return <TabPane tabId="2">
             <h3>{title}</h3>
+            <br />
             {inputs}
             <Input name="memo" onChange={this.handleInputChange}
                 placeholder="Memo(optional)" type="textarea" value={this.state.memo}/>
@@ -1312,8 +1695,10 @@ class ProposalActionButtons extends LedgerButton {
         if (!this.state.currentUser) return false
         if (this.state.actionType === Types.VOTE) {
             return ['Yes', 'No', 'NoWithVeto', 'Abstain'].indexOf(this.state.voteOption) !== -1;
+        } else if (this.state.actionType === Types.WEIGHTEDVOTE) {
+            return (this.state.yesOption + this.state.noOption + this.state.vetoOption + this.state.abstainOption) === 100;
         } else {
-            return isBetween(this.state.depositAmount, (new BigNumber(1)).dividedBy(Coin.StakingCoin.fraction), this.state.currentUser.availableCoin)
+            return isBetween(this.state.depositAmount, (new BigNumber(1)).dividedBy(Coin.StakingCoin.fraction), this.state.currentUser.availableCoin);
         }
     }
 
@@ -1338,10 +1723,20 @@ class ProposalActionButtons extends LedgerButton {
         <span className="ledger-buttons-group float-right">
             <Row>
                 {this.props.voteStarted ? 
-                    <Col><Button color="secondary" size="sm"
-                        onClick={() => this.openModal(Types.VOTE, {})}>
-                        {TypeMeta[Types.VOTE].button}
-                    </Button></Col> : ''
+                    <Col>
+                        <Button color="secondary" size="sm"
+                            onClick={() => this.openModal(Types.VOTE, {})}>
+                            {TypeMeta[Types.VOTE].button}
+                        </Button>
+                    </Col> : ''
+                }
+                {this.props.voteStarted ? 
+                    <Col>
+                        <Button style={{ whiteSpace: "nowrap",  textAlign: "center" }} color="secondary" size="sm"
+                            onClick={() => this.openModal(Types.WEIGHTEDVOTE, {})}>
+                            {TypeMeta[Types.WEIGHTEDVOTE].button}
+                        </Button>
+                    </Col> : ''
                 }
                 <Col><Button color="success" size="sm"
                     onClick={() => this.openModal(Types.DEPOSIT, {})}>
@@ -1356,6 +1751,7 @@ export {
     DelegationButtons,
     WithdrawButton,
     TransferButton,
+    MultiSendButton,
     SubmitProposalButton,
     ProposalActionButtons
 }
