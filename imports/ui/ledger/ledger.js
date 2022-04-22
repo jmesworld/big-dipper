@@ -678,23 +678,22 @@ export class Ledger {
         noOption,
         vetoOption
     ) {
-        let regularWeight = new BigNumber(1000000000000000000n);
         let currentOptions = [
             {
                 option: VoteOption.VOTE_OPTION_YES,
-                weight: (regularWeight * (yesOption / 100)).toString()
+                weight: ((yesOption * 10 ** 18) / 100).toLocaleString('fullwide', {useGrouping:false})
             },
             {
                 option: VoteOption.VOTE_OPTION_ABSTAIN,
-                weight: (regularWeight * (abstainOption / 100)).toString()
+                weight: ((abstainOption * 10 ** 18) / 100).toLocaleString('fullwide', {useGrouping:false})
             },
             {
                 option: VoteOption.VOTE_OPTION_NO,
-                weight: (regularWeight * (noOption / 100)).toString()
+                weight: ((noOption * 10 ** 18) / 100).toLocaleString('fullwide', {useGrouping:false})
             },
             {
                 option: VoteOption.VOTE_OPTION_NO_WITH_VETO,
-                weight: (regularWeight * (vetoOption / 100)).toString()
+                weight: ((vetoOption * 10 ** 18) / 100).toLocaleString('fullwide', {useGrouping:false})
             },
         ]
 
