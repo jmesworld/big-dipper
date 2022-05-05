@@ -1014,7 +1014,7 @@ class MultiSendButton extends LedgerButton {
         multisendRows[idx][name] = value;
 
         this.setState({
-            multisendRows,
+            multisendRows
         });
     };
     handleAddRow = () => {
@@ -1057,7 +1057,6 @@ class MultiSendButton extends LedgerButton {
         if (!this.state.currentUser) return null;
 
         let fileReader;
-  
         const handleFileRead = (e) => {
             let invdalidData = false;
             const content = fileReader.result.split('\n');
@@ -1117,7 +1116,7 @@ class MultiSendButton extends LedgerButton {
                             <TableCell>
                                 <Input
                                 type="text"
-                                name="recipient address"
+                                name="recipient"
                                 placeholder="address"
                                 value={this.state.multisendRows[idx].recipient}
                                 onPaste={this.handleChange(idx)}
@@ -1225,7 +1224,7 @@ class MultiSendButton extends LedgerButton {
                     validData = false;
                 } else {
                     const addressCheck = row.recipient.replace(/^cudos[0-9a-z]{39}$/gm, 'OK');
-                    const amountCheck = row.cudos.replace(/^[0-9]+$/gm, 'OK');
+                    const amountCheck = row.cudos.replace(/^[1-9]{1}[0-9]*$/gm, 'OK');
                     if (addressCheck !== 'OK' || amountCheck !== 'OK') {
                         validData = false;
                     };
