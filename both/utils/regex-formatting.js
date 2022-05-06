@@ -2,7 +2,7 @@
 // For instance: if we have 990099.000364464662179907 denoms on the chain =>
 // The human readable form will be 990,099.000364464662179907
 export const separateDecimals = (amount) => {
-    return cutTrailingZeroes(amount.replace(/\d{1,3}(?=(\d{3})+(?=\.))/gm, "$&,"));
+    return amount.replace(/\d{1,3}(?=(\d{3})+(?=\.))/gm, "$&,");
 }
 
 // Makes token amounts human readable while keeps precision
