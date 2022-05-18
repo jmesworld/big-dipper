@@ -130,6 +130,23 @@ Meteor.methods({
     }
 })
 
+const getJailedValidators = () => {
+    const url = API + `/cosmos/staking/v1beta1/validators`;
+    const response = HTTP.get(url);
+    const result = JSON.parse(response.content);
+    const validators = result.validators;
+
+    let jailedValidators = {};
+
+    for (let i = 0; i < validators.length; i++) {
+        if (validators[i].jailed) {
+            jailedValidators[validators[i].operator_address] = true;
+        }
+    }
+    
+    return jailedValidators;
+}
+
 const getVoteDetail = (votes) => {
     if (!votes) {
         return [];
@@ -148,6 +165,9 @@ const getVoteDetail = (votes) => {
         }
         validatorAddressMap[validator.operator_address] = validator.delegator_address;
     });
+
+    const jailedValidators = getJailedValidators();
+
     voters.forEach((voter) => {
         if (!votingPowerMap[voter]) {
             // voter is not a validator
@@ -161,7 +181,7 @@ const getVoteDetail = (votes) => {
                     if (delegations && delegations.length > 0) {
                         delegations.forEach((delegation) => {
                             let shares = parseFloat(delegation.delegation.shares);
-                            if (validatorAddressMap[delegation.delegation.validator_address]) {
+                            if (jailedValidators[delegation.delegation.validator_address] !== true && validatorAddressMap[delegation.delegation.validator_address]) {
                                 // deduct delegated shareds from validator if a delegator votes
                                 let validator = votingPowerMap[validatorAddressMap[delegation.delegation.validator_address]];
                                 validator.deductedShares -= shares;
@@ -169,7 +189,7 @@ const getVoteDetail = (votes) => {
                                     votingPower += (shares / parseFloat(validator.delegatorShares)) * parseFloat(validator.tokens);
                                 }
 
-                            } else {
+                            } else if (jailedValidators[delegation.delegation.validator_address] !== true) {
                                 votingPower += shares
                             }
                         });
@@ -186,7 +206,7 @@ const getVoteDetail = (votes) => {
     return votes.map((vote) => {
         let voter = votingPowerMap[vote.voter];
         let votingPower = voter.votingPower;
-        if (votingPower == undefined) {
+        if (votingPower == undefined && jailedValidators[voter.address] !== true) {
             // voter is a validator
             votingPower = voter.delegatorShares?((parseFloat(voter.deductedShares) / parseFloat(voter.delegatorShares)) * parseFloat(voter.tokens)):0;
         }
