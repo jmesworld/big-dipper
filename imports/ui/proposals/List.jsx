@@ -21,10 +21,10 @@ const ProposalRow = (props) => {
         <td className="voting-start">{(props.proposal.voting_start_time != "0001-01-01T00:00:00Z")?<TimeStamp time={props.proposal.voting_start_time}/>:'Not started'}</td>
         <td style={{overflow: 'visible'}} className="deposit text-right">{props.proposal.total_deposit?props.proposal.total_deposit.map((deposit, i) => {
             const amountToDisplay = cutTrailingZeroes(separateDecimals(separateFractions(deposit.amount)));
-            const amountToDisplayLenght = amountToDisplay.length;
-            const maxLenghtToDisplay = 11;
+            const amountToDisplayLength = amountToDisplay.length;
+            const maxLengthToDisplay = 11;
 
-            if (amountToDisplayLenght > maxLenghtToDisplay) {
+            if (amountToDisplayLength > maxLengthToDisplay) {
                 const toolTip = amountToDisplay;
                 const formattedAmount = amountToDisplay.slice(0, 6) + '...' + amountToDisplay.slice(-2);
                 return<div key={i}>
