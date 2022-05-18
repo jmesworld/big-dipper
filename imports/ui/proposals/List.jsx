@@ -1,13 +1,13 @@
 import React, { Component } from 'react';
 import { Table, Spinner } from 'reactstrap';
 import { Link } from 'react-router-dom';
-import { DenomSymbol, ProposalStatusIcon } from '../components/Icons.jsx';
-import numbro from 'numbro';
+import { ProposalStatusIcon } from '../components/Icons.jsx';
 import i18n from 'meteor/universe:i18n';
-import Coin from '/both/utils/coins.js'
 import TimeStamp from '../components/TimeStamp.jsx';
 import { SubmitProposalButton } from '../ledger/LedgerActions.jsx';
 import voca from 'voca';
+import { cutTrailingZeroes, separateDecimals, separateFractions } from '../../../both/utils/regex-formatting.js';
+import Tooltip from "react-simple-tooltip";
 
 const T = i18n.createComponent();
 
@@ -19,8 +19,29 @@ const ProposalRow = (props) => {
         <td className="status"><ProposalStatusIcon status={props.proposal.status}/><span className="d-none d-sm-inline"> {voca.chain(props.proposal.status.substr(16)).replace('_', ' ').titleCase().value()}</span></td>
         <td className="submit-block"><TimeStamp time={props.proposal.submit_time}/></td>
         <td className="voting-start">{(props.proposal.voting_start_time != "0001-01-01T00:00:00Z")?<TimeStamp time={props.proposal.voting_start_time}/>:'Not started'}</td>
-        <td className="deposit text-right">{props.proposal.total_deposit?props.proposal.total_deposit.map((deposit, i) => {
-            return <div key={i}>{new Coin(deposit.amount, deposit.denom).toString()}</div>
+        <td style={{overflow: 'visible'}} className="deposit text-right">{props.proposal.total_deposit?props.proposal.total_deposit.map((deposit, i) => {
+            const amountToDisplay = cutTrailingZeroes(separateDecimals(separateFractions(deposit.amount)));
+            const amountToDisplayLenght = amountToDisplay.length;
+            const maxLenghtToDisplay = 11;
+
+            if (amountToDisplayLenght > maxLenghtToDisplay) {
+                const toolTip = amountToDisplay;
+                const formattedAmount = amountToDisplay.slice(0, 6) + '...' + amountToDisplay.slice(-2);
+                return<div key={i}>
+                            <Tooltip
+                                padding='5'
+                                content={toolTip}
+                                background="#9c27b0"
+                                border="#9c27b0"
+                                offset='1'
+                                style={{overflow: 'visible'}}
+                                placement='left'>
+                                {formattedAmount}
+                            </Tooltip> CUDOS
+                        </div>
+            } else {
+                return <div key={i}>{amountToDisplay} CUDOS</div>
+            }
         }):'0'}</td>
     </tr>
 }
