@@ -1,10 +1,8 @@
 /* global grecaptcha */
 
 import React from 'react';
-import PropTypes from 'prop-types';
 
 import '../stylesheets/captcha-wrapper.css';
-import { VersionParams } from '@cosmjs/stargate/build/codec/tendermint/types/params';
 
 export default class CaptchaWrapper extends React.Component {
 

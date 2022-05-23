@@ -18,9 +18,9 @@ exports.MsgClientImpl = exports.MsgDepositResponse = exports.MsgDeposit = export
 /* eslint-disable */
 var long_1 = __importDefault(require("long"));
 var minimal_1 = __importDefault(require("protobufjs/minimal"));
-var any_1 = require("@cosmjs/stargate/build/codec/google/protobuf/any");
+var any_1 = require("cosmjs-types/google/protobuf/any");
 var gov_1 = require("./gov");
-var coin_1 = require("@cosmjs/stargate/build/codec/cosmos/base/v1beta1/coin");
+var coin_1 = require("cosmjs-types/cosmos/base/v1beta1/coin");
 exports.protobufPackage = "cosmos.gov.v1beta1";
 var baseMsgSubmitProposal = { proposer: "" };
 exports.MsgSubmitProposal = {

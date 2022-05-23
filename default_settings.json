@@ -60,7 +60,7 @@
             "coinType": 118,
             "appName": "CudosNetwork",
             "appVersion": "0.0.1",
-            "gasPrice": 0.02
+            "gasPrice": "5000000000000acudos"
         },
         "modules": {
             "bank": true,
@@ -75,25 +75,7 @@
             "api":"http://localhost:1317",
             "staking":"http://localhost:3000/validators"
         },
-        "fees": {
-            "delegate": {
-                "amount": [{"denom": "ucudos", "amount": 100}],
-                "gas": "180000"
-            },
-            "redelegate": {
-                "amount": [{"denom": "ucudos", "amount": 100}],
-                "gas": "360000"
-            },
-            "undelegate": {
-                "amount": [{"denom": "ucudos", "amount": 100}],
-                "gas": "180000"
-            },
-            "withdraw": {
-                "amount": [{"denom": "cudos", "amount": 100}],
-                "gas": "180000"
-            }
-        },
-        "CAPTCHA_FRONTEND_KEY": "6LceNp8eAAAAAEzOI0viOPqyub2Ht-MSjDUaDfSr"
+        "CAPTCHA_FRONTEND_KEY": "6LfQyswfAAAAAKHAYfWeGnXUGWibs10AIGbo0Hbe"
     },
     "remote":{
         "rpc":"http://localhost:26657",

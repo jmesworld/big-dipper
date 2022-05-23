@@ -102,22 +102,26 @@ export default class Proposal extends Component{
                         for (let vote of this.props.proposal.votes){
                             totalVotes = totalVotes.plus(vote.votingPower);
                             
-                            switch(vote.option){
-                            case GlobalVariables.VOTE_TYPES.YES:
-                                votesYes = votesYes.plus(vote.votingPower);
-                                break;
-                            case GlobalVariables.VOTE_TYPES.ABSTAIN:
-                                votesAbstain = votesAbstain.plus(vote.votingPower);
-                                break;
-                            case GlobalVariables.VOTE_TYPES.NO:
-                                votesNo = votesNo.plus(vote.votingPower);
-                                break;
-                            case GlobalVariables.VOTE_TYPES.NO_WITH_VETO:
-                                votesNoWithVeto = votesNoWithVeto.plus(vote.votingPower);
-                                break;
-                            default:
-                                break;
-                            }
+                            let votes = vote.options;
+
+                            votes.forEach((type) => {
+                                switch(type.option) {
+                                    case GlobalVariables.VOTE_TYPES.YES:
+                                        votesYes = votesYes.plus(vote.votingPower.multipliedBy(type.weight));
+                                        break;
+                                    case GlobalVariables.VOTE_TYPES.ABSTAIN:
+                                        votesAbstain = votesAbstain.plus(vote.votingPower.multipliedBy(type.weight));
+                                        break;
+                                    case GlobalVariables.VOTE_TYPES.NO:
+                                        votesNo = votesNo.plus(vote.votingPower.multipliedBy(type.weight));
+                                        break;
+                                    case GlobalVariables.VOTE_TYPES.NO_WITH_VETO:
+                                        votesNoWithVeto = votesNoWithVeto.plus(vote.votingPower.multipliedBy(type.weight));
+                                        break;
+                                    default:
+                                        break;
+                                }
+                            });
                         }
 
                         this.setState({
@@ -182,6 +186,20 @@ export default class Proposal extends Component{
         });
     }
 
+    pullVotes = (votes)  => {
+        let tempVotes = [];
+        votes.forEach((vote) => {
+            let voter = { ...vote };
+            vote.options.forEach((v) => {
+                    voter.option = v.option
+                    voter.options = [{...v}]
+                    voter.votingPower = vote.votingPower.multipliedBy(v.weight);
+                    tempVotes.push({...voter});
+            });     
+        });     
+        return tempVotes;
+    }
+
     populateChartData() {
         const proposal = this.props.proposal;
 
@@ -198,28 +216,27 @@ export default class Proposal extends Component{
         let datasets = [];
         let isDataEmtpy = null;
 
-        const votes = proposal.votes;
         if(!this.state.voteEnded){
 
             let maxVotingPower = emptyMaxVotingPower;
             let totalVotingPower = emptyTotalVotingPower;
             let votesByOptions = {
-                'All': votes, 
+                'All': this.pullVotes(proposal.votes), 
                 [GlobalVariables.VOTE_TYPES.YES]: [], 
                 [GlobalVariables.VOTE_TYPES.ABSTAIN]: [], 
                 [GlobalVariables.VOTE_TYPES.NO]: [], 
                 [GlobalVariables.VOTE_TYPES.NO_WITH_VETO]: []
             };
 
-            votes.sort((v1, v2) => v2['votingPower'] - v1['votingPower'])
-                .sort((v1, v2) => optionOrder[v1.option] - optionOrder[v2.option])
-                .forEach((vote) => votesByOptions[vote.option].push(vote));
+            votesByOptions['All'].forEach((vote) => { 
+                votesByOptions[vote.option].push(vote) 
+            });
 
             for (let option in votesByOptions) {
                 let data = votesByOptions[option];
 
                 if (data){
-                    maxVotingPower[option] = BigNumber.max(null, data.map((vote) => vote.votingPower));
+                    maxVotingPower[option] = BigNumber.max(null, data.map((vote) => vote.votingPower.multipliedBy(vote.options[0].weight)));
                     totalVotingPower[option] = data.reduce((s, x) => x.votingPower.plus(s), 0);
                     datasets.push({
                         datasetId: option,
@@ -343,7 +360,8 @@ export default class Proposal extends Component{
     }
 
     renderTallyResultDetail(openState, option) {
-        let votes = this.props.proposal.votes ? this.props.proposal.votes.filter((vote) => vote.option == option) : [];
+        let votes = this.pullVotes(this.props.proposal.votes);
+        votes = votes ? votes.filter((vote) => vote.option == option) : [];
         let orderDir = this.state.orderDir;
         votes = votes.sort((vote1, vote2) => ((new BigNumber(vote1['votingPower'])).minus(vote2['votingPower'])).multipliedBy(orderDir));
 

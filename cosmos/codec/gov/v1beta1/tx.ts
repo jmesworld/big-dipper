@@ -1,14 +1,14 @@
 /* eslint-disable */
 import Long from "long";
 import _m0 from "protobufjs/minimal";
-import { Any } from "@cosmjs/stargate/build/codec/google/protobuf/any";
+import { Any } from "cosmjs-types/google/protobuf/any";
 import {
   VoteOption,
   WeightedVoteOption,
   voteOptionFromJSON,
   voteOptionToJSON,
 } from "./gov";
-import { Coin } from "@cosmjs/stargate/build/codec/cosmos/base/v1beta1/coin";
+import { Coin } from "cosmjs-types/cosmos/base/v1beta1/coin";
 
 
 export const protobufPackage = "cosmos.gov.v1beta1";

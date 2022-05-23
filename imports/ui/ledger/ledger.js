@@ -4,24 +4,23 @@
 import 'babel-polyfill';
 
 import Long from "long";
-import TransportWebUSB from "@ledgerhq/hw-transport-webusb";
-import CosmosApp from "ledger-cosmos-js"
+import BigNumber from 'bignumber.js';
 import { signatureImport } from "secp256k1"
-import { Validators } from '/imports/api/validators/validators.js';
-import semver from "semver"
 import bech32 from "bech32";
 import sha256 from "crypto-js/sha256"
 import ripemd160 from "crypto-js/ripemd160"
 import CryptoJS from "crypto-js"
-import { MsgDelegate, MsgUndelegate, MsgBeginRedelegate } from "@cosmjs/stargate/build/codec/cosmos/staking/v1beta1/tx"; 
-import { MsgSend } from "@cosmjs/stargate/build/codec/cosmos/bank/v1beta1/tx"; 
-import { MsgWithdrawDelegatorReward } from "@cosmjs/stargate/build/codec/cosmos/distribution/v1beta1/tx";
+import { MsgDelegate, MsgUndelegate, MsgBeginRedelegate } from "cosmjs-types/cosmos/staking/v1beta1/tx"; 
+import { MsgSend, MsgMultiSend } from "cosmjs-types/cosmos/bank/v1beta1/tx"; 
+import { MsgWithdrawDelegatorReward } from 'cosmjs-types/cosmos/distribution/v1beta1/tx';
 import { VoteOption, TextProposal } from "../../../cosmos/codec/gov/v1beta1/gov";
-import { Plan, SoftwareUpgradeProposal, CancelSoftwareUpgradeProposal} from '../../../cosmos/codec/upgrade/upgrade';
+import { MsgVoteWeighted } from "../../../cosmos/codec/gov/v1beta1/tx";
+import { SoftwareUpgradeProposal, CancelSoftwareUpgradeProposal} from '../../../cosmos/codec/upgrade/upgrade';
 import { ParameterChangeProposal } from '../../../cosmos/codec/params/v1beta1/params';
-import { CommunityPoolSpendProposal, CommunityPoolSpendProposalWithDeposit } from '@cosmjs/stargate/build/codec/cosmos/distribution/v1beta1/distribution'
+import { CommunityPoolSpendProposal } from 'cosmjs-types/cosmos/distribution/v1beta1/distribution';
 import { UpgradeProposal, ClientUpdateProposal } from '../../../ibc-go/codec/client';
-import { encode, decode } from "uint8-to-base64";
+import { encode } from "uint8-to-base64";
+import { GasPrice } from "@cosmjs/launchpad";
 
 // TODO: discuss TIMEOUT value
 const INTERACTION_TIMEOUT = 10000
@@ -32,6 +31,7 @@ const TYPE_URLS = {
     msgUndelegate:"/cosmos.staking.v1beta1.MsgUndelegate",
     msgRedelegate: "/cosmos.staking.v1beta1.MsgBeginRedelegate",
     msgSend: "/cosmos.bank.v1beta1.MsgSend",
+    msgMultiSend: "/cosmos.bank.v1beta1.MsgMultiSend",
     msgWithdraw: "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward",
     msgSubmitProposal: "/cosmos.gov.v1beta1.MsgSubmitProposal",
     ClientStateType: "/ibc.lightclients.tendermint.v1.ClientState",
@@ -257,9 +257,9 @@ export class Ledger {
                     // Currently, Keplr doesn't support dynamic calculation of the gas prices based on on-chain data.
                     // Make sure that the gas prices are higher than the minimum gas prices accepted by chain validators and RPC/REST endpoint.
                     gasPriceStep: {
-                        low: Meteor.settings.public.ledger.gasPrice,
-                        average: Meteor.settings.public.ledger.gasPrice * 2,
-                        high: Meteor.settings.public.ledger.gasPrice * 4
+                        low: parseInt(GasPrice.fromString(Meteor.settings.public.ledger.gasPrice).amount.toString()),
+                        average: parseInt(GasPrice.fromString(Meteor.settings.public.ledger.gasPrice).amount.toString()) * 2,
+                        high: parseInt(GasPrice.fromString(Meteor.settings.public.ledger.gasPrice).amount.toString()) * 4,
                     },
                     features: ["stargate", "ibc-transfer", "no-legacy-stdTx"]
                 });
@@ -503,7 +503,7 @@ export class Ledger {
             }),
         }];
 
-        return {msgAny, memo: txContext.memo, fee: Meteor.settings.public.fees.delegate};
+        return {msgAny, memo: txContext.memo};
     }
 
     // Creates a new undelegation tx based on the input parameters
@@ -526,7 +526,7 @@ export class Ledger {
             memo: txContext.memo,
         }];
 
-        return {msgAny, memo: txContext.memo, fee: Meteor.settings.public.fees.undelegate};
+        return {msgAny, memo: txContext.memo};
     }
 
     // Creates a new redelegation tx based on the input parameters
@@ -551,7 +551,7 @@ export class Ledger {
             memo: txContext.memo,
         }];
 
-        return {msgAny, memo: txContext.memo, fee: Meteor.settings.public.fees.redelegate};
+        return {msgAny, memo: txContext.memo};
     }
 
     static async createWithdraw(txContext, validators){
@@ -565,7 +565,7 @@ export class Ledger {
             })
         }));
 
-        return {msgAny, memo: txContext.memo, fee: Meteor.settings.public.fees.redelegate};
+        return {msgAny, memo: txContext.memo};
     }
 
     // Creates a new transfer tx based on the input parameters
@@ -588,7 +588,41 @@ export class Ledger {
             }),
         }];
 
-        return {msgAny, memo: txContext.memo, fee: Meteor.settings.public.fees.redelegate};
+        return {msgAny, memo: txContext.memo};
+    }
+
+    static createMultiTransfer(
+        txContext,
+        multiSend,
+    ) {
+
+        let totalAmountDue = 0;
+        multiSend.forEach((recipient) => {
+            totalAmountDue += parseInt(recipient.cudos)
+        })
+        const msgAny = [{    
+            typeUrl: TYPE_URLS.msgMultiSend,
+            value: MsgMultiSend.fromPartial({
+                inputs: [
+                  {
+                    address: txContext.bech32,
+                    coins: [{
+                        denom: "acudos",
+                        amount: (totalAmountDue * 10 ** 18).toLocaleString('fullwide', {useGrouping:false})
+                    }]
+                  }
+                ],
+                outputs: multiSend.map((item) => ({
+                    address: item.recipient,
+                    coins: [{
+                        denom: "acudos",
+                        amount: (item.cudos * 10 ** 18).toLocaleString('fullwide', {useGrouping:false})
+                    }]
+                })),
+            }),
+        }];
+
+        return {msgAny, memo: txContext.memo};
     }
 
 
@@ -612,7 +646,7 @@ export class Ledger {
             }
         }];
 
-        return {msgAny, memo: txContext.memo, fee: Meteor.settings.public.fees.redelegate};
+        return {msgAny, memo: txContext.memo};
     }
 
     static createVote(
@@ -633,7 +667,50 @@ export class Ledger {
             }
         }];
 
-        return {msgAny, memo: txContext.memo, fee: Meteor.settings.public.fees.redelegate};
+        return {msgAny, memo: txContext.memo};
+    }
+
+    static createWeightedVote(
+        txContext,
+        proposalId,
+        yesOption,
+        abstainOption,
+        noOption,
+        vetoOption
+    ) {
+        let currentOptions = [
+            {
+                option: VoteOption.VOTE_OPTION_YES,
+                weight: ((yesOption * 10 ** 18) / 100).toLocaleString('fullwide', {useGrouping:false})
+            },
+            {
+                option: VoteOption.VOTE_OPTION_ABSTAIN,
+                weight: ((abstainOption * 10 ** 18) / 100).toLocaleString('fullwide', {useGrouping:false})
+            },
+            {
+                option: VoteOption.VOTE_OPTION_NO,
+                weight: ((noOption * 10 ** 18) / 100).toLocaleString('fullwide', {useGrouping:false})
+            },
+            {
+                option: VoteOption.VOTE_OPTION_NO_WITH_VETO,
+                weight: ((vetoOption * 10 ** 18) / 100).toLocaleString('fullwide', {useGrouping:false})
+            },
+        ]
+
+        let options = []
+        currentOptions.forEach((vote) => {
+            if (vote.weight !== '0') { options.push(vote) }
+        });
+
+        const msgAny = [{
+            typeUrl: "/cosmos.gov.v1beta1.MsgVoteWeighted",
+            value: MsgVoteWeighted.fromPartial({
+                proposalId: new Long(proposalId),
+                voter: txContext.bech32,
+                options: options
+            })
+        }];
+        return {msgAny, memo: txContext.memo};
     }
 
 
@@ -653,7 +730,7 @@ export class Ledger {
             },
         }]; 
 
-        return {msgAny, memo: txContext.memo, fee: Meteor.settings.public.fees.redelegate};
+        return {msgAny, memo: txContext.memo};
     }
 
 }

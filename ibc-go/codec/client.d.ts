@@ -1,5 +1,5 @@
 import _m0 from "protobufjs/minimal";
-import { Any } from "@cosmjs/stargate/build/codec/google/protobuf/any";
+import { Any } from "cosmjs-types/google/protobuf/any";
 import Long from "long";
 import { Plan } from "../../cosmos/codec/upgrade/v1beta1/upgrade";
 export declare const protobufPackage = "ibc.core.client.v1";

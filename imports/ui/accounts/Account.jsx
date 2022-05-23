@@ -7,7 +7,7 @@ import Unbondings from './Unbondings.jsx';
 import AccountTransactions from '../components/TransactionsContainer.js';
 import ChainStates from '../components/ChainStatesContainer.js'
 import { Helmet } from 'react-helmet';
-import { WithdrawButton, TransferButton } from '../ledger/LedgerActions.jsx';
+import { TransferButton, MultiSendButton } from '../ledger/LedgerActions.jsx';
 import i18n from 'meteor/universe:i18n';
 import Coin from '/both/utils/coins.js'
 import { withTracker } from 'meteor/react-meteor-data';
@@ -384,6 +384,7 @@ class AccountDetails extends Component{
                                 </Col>
                                 <Col md={6} lg={4} className="total d-flex flex-column justify-content-end">
                                     {this.state.user?<Row>
+                                        <Col xs={12}><MultiSendButton history={this.props.history} address={this.state.address} denom={this.state.denom}/></Col>
                                         <Col xs={12}><TransferButton history={this.props.history} address={this.state.address} denom={this.state.denom}/></Col>
                                         {/* {this.state.user===this.state.address?<Col xs={12}><WithdrawButton  history={this.props.history} rewards={this.state.rewards} commission={this.state.commission} address={this.state.operatorAddress} denom={this.state.denom}/></Col>:null} */}
                                     </Row>:null}

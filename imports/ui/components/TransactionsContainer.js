@@ -53,7 +53,8 @@ export default TransactionsContainer = withTracker((props) => {
             $or: [
                 {"tx.body.messages.@type":"/cosmos.gov.v1beta1.MsgSubmitProposal"},
                 {"tx.body.messages.@type":"/cosmos.gov.v1beta1.MsgDeposit"},
-                {"tx.body.messages.@type":"/cosmos.gov.v1beta1.MsgVote"}
+                {"tx.body.messages.@type":"/cosmos.gov.v1beta1.MsgVote"},
+                {"tx.body.messages.@type":"/cosmos.gov.v1beta1.MsgVoteWeighted"}
             ]
         }).fetch() : {},
         slashingTxs: transactionsExist ? Transactions.find({
