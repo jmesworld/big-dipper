@@ -777,7 +777,7 @@ function getProposalContent(proposalData){
                 changes: [{
                     subspace: proposalData.changeSubspace,
                     key: proposalData.changeKey,
-                    value: `"${proposalData.changeValue}"`
+                    value: `${proposalData.changeValue}`
                 }]
             }).finish()
         }
