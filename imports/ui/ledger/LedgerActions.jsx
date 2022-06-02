@@ -942,10 +942,18 @@ class DelegationButtons extends LedgerButton {
 
     render = () => {
         return <span className="ledger-buttons-group float-right">
+            
+            {/* DISABLING CONDITIONAL DELEGATE BUTTON
             {isActiveValidator(this.props.validator)?<Button color="success"
                 size="lg" onClick={() => this.openModal(Types.DELEGATE)}>
                 {TypeMeta[Types.DELEGATE].button}
-            </Button>:null}
+            </Button>:null} 
+            */}
+            
+            <Button color="success"
+                size="lg" onClick={() => this.openModal(Types.DELEGATE)}>
+                {TypeMeta[Types.DELEGATE].button}
+            </Button>
             {this.renderRedelegateButtons()}
             {this.renderModal()}
         </span>;
