@@ -130,7 +130,16 @@ export default ValidatorListContainer = withTracker((props) => {
         }
         
     }
-    // console.log(props.state.limit);
+
+    if (validators && props.priority==1) {
+        let sortedValidators = validators.sort(function(a, b) {
+            return props.votingPowerDir==1?
+                a.voting_power - b.voting_power:
+                b.voting_power - a.voting_power
+        })
+        validators = sortedValidators;
+    }
+
     return {
         loading,
         validatorsExist,
