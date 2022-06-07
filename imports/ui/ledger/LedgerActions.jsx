@@ -228,6 +228,9 @@ class LedgerButton extends Component {
     }
 
     close = () => {
+        if (this.state.actionType === Types.DELEGATE) {
+            location.reload();
+        }
         this.setState({
             multisendRows: [{},{}],
             yesOption: 0,
