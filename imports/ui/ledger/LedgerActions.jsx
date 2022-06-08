@@ -228,10 +228,10 @@ class LedgerButton extends Component {
     }
 
     close = () => {
-        if (this.state.actionType === Types.DELEGATE ||
+        if (this.state.txHash && (this.state.actionType === Types.DELEGATE ||
             this.state.actionType === Types.REDELEGATE ||
             this.state.actionType === Types.UNDELEGATE
-            ) { location.reload();
+        )) { location.reload();
         }
         this.setState({
             multisendRows: [{},{}],
