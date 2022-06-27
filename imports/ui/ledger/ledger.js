@@ -275,7 +275,7 @@ export class Ledger {
         // If you don't request enabling before usage, there is no guarantee that other methods will work.
         await window.keplr.enable(Meteor.settings.public.chainId);
 
-        const offlineSigner = window.getOfflineSigner(Meteor.settings.public.chainId);
+        const offlineSigner = window.getOfflineSignerOnlyAmino(Meteor.settings.public.chainId);
         const account = (await offlineSigner.getAccounts())[0];
     
         localStorage.setItem(CURRENTUSERADDR, account.address);
@@ -295,7 +295,7 @@ export class Ledger {
             await Ledger.connectKeplr();
         }
 
-        const offlineSigner = window.getOfflineSigner(Meteor.settings.public.chainId);
+        const offlineSigner = window.getOfflineSignerOnlyAmino(Meteor.settings.public.chainId);
         let account = (await offlineSigner.getAccounts())[0];
         return account;
     }
