@@ -46,6 +46,10 @@ constructor(amount, denom=Meteor.settings.public.bondDenom) {
         this._coin = "";
         this._amount = new BigNumber(amount);
     }
+
+    if (this._coin.username) {
+        this._coin.denom = this._coin.username
+    }
 }
 
 get amount () {

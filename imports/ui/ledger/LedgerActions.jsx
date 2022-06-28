@@ -608,7 +608,7 @@ class LedgerButton extends Component {
             const chainId = Meteor.settings.public.chainId;
             await window.keplr.enable(chainId);
 
-            const offlineSigner = window.getOfflineSigner(chainId);
+            const offlineSigner = window.getOfflineSignerOnlyAmino(chainId);
 
             const rpcEndpoint = Meteor.settings.public.urls.rpc;
             const client = await SigningStargateClient.connectWithSigner(rpcEndpoint, offlineSigner, {

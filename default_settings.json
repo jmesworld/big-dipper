@@ -54,7 +54,13 @@
                 "denom": "cudos",
                 "displayName": "CUDOS",
                 "fraction": 1
-            } 
+            },
+            {
+                "denom": "cudosAdmin",
+                "displayName": "cudosAdmin",
+                "username": "Admin Token",
+                "fraction": 1
+            }
         ],
         "ledger":{
             "coinType": 118,

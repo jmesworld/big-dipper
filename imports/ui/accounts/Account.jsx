@@ -231,7 +231,7 @@ class AccountDetails extends Component{
    
     displayStakingDenom(denomType){
         let findCoinType = Meteor.settings.public.coins.find(({denom}) => denom === denomType);
-        let currentCoinType = findCoinType ? findCoinType.displayName : null;
+        let currentCoinType = findCoinType ? findCoinType.username?findCoinType.username:findCoinType.displayName : null;
         return currentCoinType
     }
 
