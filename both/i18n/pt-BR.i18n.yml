@@ -24,7 +24,7 @@ common:
     retry: 'Tentar novamente'
     rewards: 'Recompensas'
 navbar:
-    siteName: 'CUDOS Explorer'
+    siteName: 'JMES Explorer'
     validators: 'Validadores'
     blocks: 'Blocos'
     transactions: 'Transações'

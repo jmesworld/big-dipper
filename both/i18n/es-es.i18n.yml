@@ -23,7 +23,7 @@ common:
     cancel: 'Cancelar'
     retry: 'Reintentar'
 navbar:
-    siteName: 'CUDOS Explorer'
+    siteName: 'JMES Explorer'
     validators: 'Validadores'
     blocks: 'Bloques'
     transactions: 'Transacciones'

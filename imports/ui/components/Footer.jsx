@@ -22,13 +22,13 @@ export default class Footer extends React.Component {
             <div>
                 <Navbar color="light" light expand="md" fixed="bottom" id="footer" className="d-none d-md-flex">
                     
-                    <p>© Cudos Ltd. 2021
+                    <p>© Jmes Ltd. 2021
                     &nbsp; | &nbsp;
-                    <a href="https://www.cudos.org/terms-and-conditions/">Terms and Conditions</a> 
+                    <a href="https://icons.jmes.world/terms">Terms and Conditions</a> 
                     &nbsp; | &nbsp;
-                    <a href="https://www.cudos.org/privacy-policy/">Privacy Policy</a> 
+                    <a href="https://icons.jmes.world/policy">Privacy Policy</a> 
                     &nbsp; | &nbsp;
-                    <a href="https://www.cudoventures.com/cookie-policy/">Cookie Policy</a> 
+                    <a href="https://icons.jmes.world/policy">Cookie Policy</a> 
                     </p>
                    
                     <Nav className="ml-auto" navbar>
@@ -45,7 +45,7 @@ export default class Footer extends React.Component {
                         buttonStyle={{ color: "#ffffff", background: "#6a1d27"}}
                         expires={150}
                     >
-                       We use cookies to enhance the user experience. Read our <a href="https://www.cudos.org/privacy-policy/">Privacy Policy</a>
+                       We use cookies to enhance the user experience. Read our <a href="https://icons.jmes.world/policy">Privacy Policy</a>
                     </CookieConsent>  
 
                 </Navbar>

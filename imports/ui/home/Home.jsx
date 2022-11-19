@@ -16,7 +16,7 @@ export default class Home extends Component{
     render() {
         return <div id="home">
             <Helmet>
-                <title>CUDOS Explorer</title>
+                <title>JMES Explorer</title>
                 <meta name="description" content="The decentralized cloud computing network for everyone." />
             </Helmet>
             <ChainInfo/>

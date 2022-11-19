@@ -300,8 +300,8 @@ class AccountDetails extends Component{
         else if (this.state.accountExists){
             return <div id="account">
                 <Helmet>
-                    <title>Account Details of {this.state.address} on CUDOS network</title>
-                    <meta name="description" content={"Account Details of "+this.state.address+" on CUDOS network"} />
+                    <title>Account Details of {this.state.address} on JMES network</title>
+                    <meta name="description" content={"Account Details of "+this.state.address+" on JMES network"} />
                 </Helmet>
                 <Row>
                     <Col md={3} xs={12}><h1 className="d-none d-lg-block"><T>accounts.accountDetails</T></h1></Col>

@@ -196,7 +196,7 @@ export default class Validator extends Component{
                 let details = (this.props.validator.description&&this.props.validator.description.details)?this.props.validator.description.details:"";
                 return <Row className="validator-details">
                     <Helmet>
-                        <title>{ moniker } - CUDOS Validator</title>
+                        <title>{ moniker } - JMES Validator</title>
                         <meta name="description" content={details} />
                     </Helmet>
                     <Col xs={12}>

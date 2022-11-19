@@ -1,91 +1,48 @@
 {
     "public":{
-        "networkType": "",
-        "chainName": "CudosNetwork",
-        "chainId": "cudos-local-network",
-        "gtm": "",
-        "slashingWindow": 400,
+        "chainName": "JMES Testnet 888",
+        "chainId": "jmes-888",
+        "gtm": "{Add your Google Tag Manager ID here}",
+        "slashingWindow": 10000,
         "uptimeWindow": 250,
         "initialPageSize": 30,
-        "secp256k1": true,
-        "bech32PrefixAccAddr": "cudos",
-        "bech32PrefixAccPub": "cudospub",
-        "bech32PrefixValAddr": "cudosvaloper",
-        "bech32PrefixValPub": "cudosvaloperpub",
-        "bech32PrefixConsAddr": "cudosvalcons",
-        "bech32PrefixConsPub": "cudosvalconspub",
-        "bondDenom": "acudos",
-        "powerReduction": 1000000000000000000,
-        "onChainPowerReduction": 1000000000000000000,
-        "genesisTime": "2021-09-17T12:54:30.602457663Z",
-        "faucetUrl": "http://localhost:5000",
+        "secp256k1": false,
+        "bech32PrefixAccAddr": "jmes",
+        "bech32PrefixAccPub": "jmespub",
+        "bech32PrefixValAddr": "jmesvaloper",
+        "bech32PrefixValPub": "jmesvaloperpub",
+        "bech32PrefixConsAddr": "jmesvalcons",
+        "bech32PrefixConsPub": "jmesvalconspub",
+        "bondDenom": "ujmes",
+        "powerReduction": 1000000,
         "coins": [
             {
-                "denom": "acudos",
-                "displayName": "CUDOS",
-                "fraction": 1000000000000000000
-            },
-            {
-                "denom": "fcudos",
-                "displayName": "CUDOS",
-                "fraction": 1000000000000000
-            },
-            {
-                "denom": "pcudos",
-                "displayName": "CUDOS",
-                "fraction": 1000000000000
-            },
-            {
-                "denom": "ncudos",
-                "displayName": "CUDOS",
-                "fraction": 1000000000
-            },
-            {
-                "denom": "ucudos",
-                "displayName": "CUDOS",
+                "denom": "ujmes",
+                "displayName": "JMES",
                 "fraction": 1000000
-            },
-            {
-                "denom": "mcudos",
-                "displayName": "CUDOS",
-                "fraction": 1000
-            },
-            {
-                "denom": "cudos",
-                "displayName": "CUDOS",
-                "fraction": 1
-            },
-            {
-                "denom": "cudosAdmin",
-                "displayName": "cudosAdmin",
-                "username": "Admin Token",
-                "fraction": 1
             }
+           
         ],
         "ledger":{
-            "coinType": 118,
-            "appName": "CudosNetwork",
-            "appVersion": "0.0.1",
-            "gasPrice": "5000000000000acudos"
+            "coinType": 330,
+            "appName": "JMES",
+            "appVersion": "2.16.0",
+            "gasPrice": 0.02
         },
         "modules": {
             "bank": true,
             "supply": true,
-            "minting": true,
+            "minting": false,
             "gov": true,
-            "distribution": true
+            "distribution": false
         },
-        "coingeckoId": "cudos",
-        "urls": {
-            "rpc":"http://localhost:26657",
-            "api":"http://localhost:1317",
-            "staking":"http://localhost:3000/validators"
-        },
-        "CAPTCHA_FRONTEND_KEY": "6LfQyswfAAAAAKHAYfWeGnXUGWibs10AIGbo0Hbe"
+        "coingeckoId": "cosmos",
+        "networks": "https://gist.githubusercontent.com/kwunyeung/8be4598c77c61e497dfc7220a678b3ee/raw/bd-networks.json",
+        "banners": false
     },
     "remote":{
-        "rpc":"http://localhost:26657",
-        "api":"http://localhost:1317"
+        "rpc": "http://51.38.52.37:1889",
+        "api":"http://51.38.52.37:1317"
     },
     "debug": {
         "startTimer": true
@@ -105,3 +62,4 @@
         "delegationInterval": 900000
     }
 }
+

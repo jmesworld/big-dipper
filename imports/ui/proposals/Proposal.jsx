@@ -416,7 +416,7 @@ export default class Proposal extends Component{
 
                 return <div>
                     <Helmet>
-                        <title>{this.props.proposal.content.title} | CUDOS</title>
+                        <title>{this.props.proposal.content.title} | JMES</title>
                         <meta name="description" content={this.props.proposal.content.description} />
                     </Helmet>
 

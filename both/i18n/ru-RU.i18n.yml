@@ -24,7 +24,7 @@ common:
     retry: 'Повторить попытку'
     rewards: 'награды'
 navbar:
-    siteName: 'CUDOS Explorer'
+    siteName: 'JMES Explorer'
     validators: 'валидаторы'
     blocks: 'блоки'
     transactions: 'транзакции'
