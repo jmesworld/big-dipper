@@ -87,7 +87,9 @@ body {
     .sign-in-btn {
       margin-top: 5px;
     }
-
+    .navbar-primary-blue {
+      background-color: rgba(15, 0, 86, 0.3 );
+    }
     a.navbar-brand span {
       font-family: 'Red Hat Display', sans-serif;
     }
@@ -138,8 +140,8 @@ body {
   }
   
   a.navbar-brand .logo {
-    max-height: 40px;
-    max-width: 40px;
+    max-height: 35px;
+    max-width: 155px;
   }
   
   #header-search {
@@ -1085,6 +1087,6 @@ body {
     max-width: 800px;
   }
 
-  input[name=cudos]::placeholder{
+  input[name=jmes]::placeholder{
     text-align: center;
  }

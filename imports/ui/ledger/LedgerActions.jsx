@@ -1172,7 +1172,7 @@ class MultiSendButton extends LedgerButton {
                         <TableRow >
                         <TableCell style={{ border: "none", textAlign: "right",verticalAlign: "middle" }}>Total:</TableCell>
                         <TableCell style={{ width:"0%", textAlign: "center",verticalAlign: "middle" }}>{this.MultiSendTotal()}</TableCell>
-                        <TableCell style={{ border: "none" }}>CUDOS</TableCell>
+                        <TableCell style={{ border: "none" }}>JMES</TableCell>
                         </TableRow>
                 </TableFooter>
                 </Table>

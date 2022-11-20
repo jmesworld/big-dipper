@@ -34,8 +34,8 @@ export default class Proposals extends Component{
     render() {
         return <div>
             <Helmet>
-                <title>Governance Proposals on CUDOS network</title>
-                <meta name="description" content="CUDOS network incorporates on-chain governance. Come to see how on-chain governance can be achieved on CUDOS network." />
+                <title>Governance Proposals on JMES network</title>
+                <meta name="description" content="JMES network incorporates on-chain governance. Come to see how on-chain governance can be achieved on JMES network." />
             </Helmet>
             <Row>
                 <Col md={3} xs={12}><h1 className="d-none d-lg-block"><T>proposals.proposals</T></h1></Col>

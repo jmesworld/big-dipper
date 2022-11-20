@@ -37,10 +37,10 @@ const ProposalRow = (props) => {
                                 style={{overflow: 'visible'}}
                                 placement='left'>
                                 {formattedAmount}
-                            </Tooltip> CUDOS
+                            </Tooltip> JMES
                         </div>
             } else {
-                return <div key={i}>{amountToDisplay} CUDOS</div>
+                return <div key={i}>{amountToDisplay} JMES</div>
             }
         }):'0'}</td>
     </tr>

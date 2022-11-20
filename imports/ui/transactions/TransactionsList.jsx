@@ -78,8 +78,8 @@ export default class Transactions extends Component{
     render(){
         return <div id="transactions">
             <Helmet>
-                <title>Latest Transactions on CUDOS</title>
-                <meta name="description" content="See what is happening on CUDOS network" />
+                <title>Latest Transactions on JMES</title>
+                <meta name="description" content="See what is happening on JMES network" />
             </Helmet>
             <Row>
                 <Col md={3} xs={12}><h1 className="d-none d-lg-block"><T>transactions.transactions</T></h1></Col>

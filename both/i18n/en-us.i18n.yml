@@ -58,7 +58,7 @@ common:
     counterparty: 'Counterparty'
 
 navbar:
-    siteName: 'CUDOS Explorer'
+    siteName: 'JMES Explorer'
     version: '-'
     validators: 'Validators'
     blocks: 'Blocks'
