@@ -18,8 +18,11 @@ RUN apk --no-cache add \
     bash \
     g++ \
     make \
-    python
-
+    python3 \
+    pkgconfig \
+    libusb-dev \
+    linux-headers \
+    eudev-dev
 
 COPY --from=0 $SCRIPTS_FOLDER $SCRIPTS_FOLDER/
 
