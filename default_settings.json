@@ -17,7 +17,7 @@
         "bondDenom": "ujmes",
         "powerReduction": 1000000,
         "onChainPowerReduction": 1000000,
-        "genesisTime": "2022-11-16T06:43:31.60236703Z",
+        "genesisTime": "2023-01-08T19:10:29.30457224Z",
         "coins": [
             {
                 "denom": "ujmes",
@@ -31,7 +31,7 @@
             }
         ],
         "ledger":{
-            "coinType": 330,
+            "coinType": 6280,
             "appName": "JMES",
             "appVersion": "0.34.21",
             "gasPrice": 0.02
@@ -72,4 +72,3 @@
         "delegationInterval": 900000
     }
 }
-
